@@ -1,7 +1,6 @@
-package net.kongbaguni.lightmetter.composable
+package net.kongbaguni.lightmetter.composable.component
 
 import android.Manifest
-import android.graphics.Camera
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -17,50 +16,70 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.kongbaguni.lightmetter.model.LightMetterModel
 import net.kongbaguni.lightmetter.utill.LightMetterCameraManager
-
 @Composable
-fun CameraEVComposable (
-    modifier : Modifier = Modifier
-){
-    val lightMetterCameraManager: LightMetterCameraManager = LightMetterCameraManager(LocalContext.current)
+fun CameraEVCheckButton(
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val isPreview = LocalInspectionMode.current
 
     var ev by remember { mutableStateOf<LightMetterModel?>(null) }
+
+    val lightMetterCameraManager = remember {
+        if (!isPreview) LightMetterCameraManager(context) else null
+    }
 
     val permissionLauncher =
         rememberLauncherForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { granted ->
-            if (granted) {
-                lightMetterCameraManager.photometry ({ value ->
-                    ev = value
-                }, {
-
-                }
+            if (granted && !isPreview) {
+                lightMetterCameraManager?.photometry(
+                    { value -> ev = value },
+                    {}
                 )
             }
         }
 
-    Column {
+    Column(modifier) {
+
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Button(onClick = {
-                lightMetterCameraManager.photometry({ value ->
-                    ev = value
-                },
-                {
-                    permissionLauncher.launch(Manifest.permission.CAMERA)
-                }
-                )
-            }) {
-                Text(
-                    text = "측광",
-                )
-                CameraMonitorUI(context = LocalContext.current, Modifier.padding(10.dp))
 
+            Button(onClick = {
+
+                if (isPreview) return@Button
+
+                lightMetterCameraManager?.photometry(
+                    { value ->
+                        ev = value
+                    },
+                    {
+                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                )
+
+            }) {
+
+                Text("측광")
+
+                CameraMonitorIndicator(
+                    modifier = Modifier.padding(10.dp),
+                    context = context
+                )
             }
         }
+
         EvProgressBar(ev?.getEv() ?: 0.0)
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CarmeraEvCheckButtonPreview() {
+    CameraEVCheckButton()
 }

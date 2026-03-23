@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">lightMetter</string>
+    <string name="body_list">body list</string>
+    <string name="lens_list">lens list</string>
 </resources>

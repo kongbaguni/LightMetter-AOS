@@ -1,4 +1,4 @@
-package net.kongbaguni.lightmetter.composable
+package net.kongbaguni.lightmetter.composable.component
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.LinearProgressIndicator
