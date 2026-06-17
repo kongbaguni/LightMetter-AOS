@@ -1,17 +1,22 @@
 package net.kongbaguni.lightmetter.composable.component
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun SwitchListColumnItem(
@@ -20,30 +25,39 @@ fun SwitchListColumnItem(
     isSelected: Boolean,
     onClick: (Boolean) -> Unit
 ) {
-    Row(
-        Modifier
-            .background(Color.White)
+    Surface(
+        modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        color = if (isSelected) Color(0xFFE0E0E0) else Color.Transparent,
+        shape = RoundedCornerShape(12.dp),
+        onClick = { onClick(!isSelected) }
     ) {
-        ToggleSwitch(isSelected, onClick)
+        Row(
+            Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = brand,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Light,
+                    color = if (isSelected) Color.Black else Color.Gray
+                )
+                Text(
+                    text = name,
+                    fontSize = 18.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    color = if (isSelected) Color.Black else Color.White
+                )
+            }
 
-        Text(
-            brand,
-            Modifier.padding(5.dp),
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = if (isSelected) Color.Black else Color.Gray
-        )
-
-        Text(
-            name,
-            Modifier.padding(5.dp),
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = if (isSelected) Color.Black else Color.Gray
-        )
-
-
+            ToggleSwitch(isSelected, onClick)
+        }
     }
-
 }
 
 @Preview

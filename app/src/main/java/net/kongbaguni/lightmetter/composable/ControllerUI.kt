@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,6 +20,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.kongbaguni.lightmetter.model.DialModel
+import kotlin.math.log2
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
@@ -43,6 +45,24 @@ fun ControllerUI() {
     val initialSpeedIndex = remember { mutableStateOf<Int?>(null) }
 
     val scope = rememberCoroutineScope()
+
+    val ev = remember {
+        derivedStateOf {
+            val aperture = selectAperture.value?.value as? Double
+            val speedString = selectSpeed.value?.value as? String
+            val iso = selectIso.value?.value as? Int
+
+            if (aperture != null && speedString != null && iso != null) {
+                val t = parseShutterSpeed(speedString)
+                val n = aperture
+                val s = iso.toDouble()
+
+                log2((n * n) / t) - log2(s / 100.0)
+            } else {
+                null
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         isoList.clear()
@@ -73,6 +93,10 @@ fun ControllerUI() {
     }
 
     Column {
+
+        ev.value?.let {
+            Text(text = "EV: ${"%.1f".format(it)}")
+        }
 
         Text("ISO")
         initialIsoList.value?.let { index ->
@@ -122,4 +146,13 @@ fun ControllerUI() {
 @Composable
 fun ControllerUIPreview() {
     ControllerUI()
+}
+
+private fun parseShutterSpeed(speed: String): Double {
+    return if (speed.contains("/")) {
+        val parts = speed.split("/")
+        parts[0].toDouble() / parts[1].toDouble()
+    } else {
+        speed.toDouble()
+    }
 }
