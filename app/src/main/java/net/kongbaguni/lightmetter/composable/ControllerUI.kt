@@ -31,17 +31,25 @@ fun ControllerUI() {
 
     val speedList = remember { mutableStateListOf<DialModel>() }
 
+    val isoList = remember { mutableStateListOf<DialModel>() }
 
     val selectAperture  = remember { mutableStateOf<DialModel?>( null )}
 
     val selectSpeed = remember { mutableStateOf<DialModel?>( null )}
+    val selectIso =  remember { mutableStateOf<DialModel?>( null )}
 
+    val initialIsoList = remember { mutableStateOf<Int?>(null) }
     val initialApertureIndex = remember { mutableStateOf<Int?>(null) }
     val initialSpeedIndex = remember { mutableStateOf<Int?>(null) }
 
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
+        isoList.clear()
+        isoList.addAll ( dataStore.isoList.map {
+            DialModel(it.title(), it.value)
+        })
+
         val lens = dataStore.selectedLens.first()
         apertureList.clear()
         apertureList.addAll(lens.apertures.map {
@@ -59,11 +67,27 @@ fun ControllerUI() {
 
         val savedSpeed = dataStore.selectedShutterSpeedValue.first()
         initialSpeedIndex.value = speedList.indexOfFirst { it.value == savedSpeed }.coerceAtLeast(0)
+
+        val savedIso = dataStore.selectedIsoValue.first()
+        initialIsoList.value = isoList.indexOfFirst { it.value == savedIso }.coerceAtLeast(0)
     }
 
     Column {
-        Text("lens")
 
+        Text("ISO")
+        initialIsoList.value?.let { index ->
+            key(index) {
+                DialSelector(isoList, initialIndex = index) {
+                    Log.d("test", it.title)
+                    selectIso.value = it
+                    scope.launch {
+                        dataStore.saveIso(it.value as Int)
+                    }
+                }
+            }
+        }
+
+        Text("lens")
         initialApertureIndex.value?.let { index ->
             key(index) {
                 DialSelector(apertureList, initialIndex = index) {

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.map
 import net.kongbaguni.lightmetter.extensions.dataStore
 import net.kongbaguni.lightmetter.model.BodyModel
 import net.kongbaguni.lightmetter.model.BodyUiState
+import net.kongbaguni.lightmetter.model.IsoModel
 import net.kongbaguni.lightmetter.model.LensModel
 import net.kongbaguni.lightmetter.model.LensUiState
 
@@ -18,11 +19,22 @@ class DataStore(context: Context) {
     val bodyList: List<BodyModel> = BodyModel.load(context)
     val lensList: List<LensModel> = LensModel.load(context)
 
+    val isoList: List<IsoModel> = listOf(
+        6, 12, 25, 32, 40, 50, 64, 80, 100, 125, 160, 200, 250, 320, 400, 500, 640, 800, 1000, 1250, 1600, 3200, 6400
+    ).map { IsoModel(it) }
     companion object {
         private val BODY_ID = intPreferencesKey("body_id")
         private val LENS_ID = intPreferencesKey("lens_id")
         private val APERTURE_VALUE = doublePreferencesKey("aperture_value")
         private val SHUTTER_SPEED_VALUE = stringPreferencesKey("shutter_speed_value")
+        private val ISO_VALUE = intPreferencesKey("iso_value")
+    }
+
+    /** ISO 저장 */
+    suspend fun saveIso(value: Int) {
+        dataStore.edit {
+            it[ISO_VALUE] = value
+        }
     }
 
     /** Aperture 저장 */
@@ -46,6 +58,10 @@ class DataStore(context: Context) {
     /** 선택된 Shutter Speed value */
     val selectedShutterSpeedValue: Flow<String?> =
         dataStore.data.map { it[SHUTTER_SPEED_VALUE] }
+
+    /** 선택된 ISO value */
+    val selectedIsoValue: Flow<Int?> =
+        dataStore.data.map { it[ISO_VALUE] }
 
     /** Body 저장 */
     suspend fun saveBody(body: BodyModel) {
