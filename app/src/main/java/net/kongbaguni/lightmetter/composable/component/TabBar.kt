@@ -4,8 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import net.kongbaguni.lightmetter.composable.screen.Page
@@ -19,11 +21,13 @@ fun TabBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color.DarkGray)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF1E1E1E))
             .padding(4.dp)
     ) {
-        TabItem(Page.MAIN, current, onTabSelected, "Main")
-        TabItem(Page.BODYLIST, current, onTabSelected, "Body")
-        TabItem(Page.LENSLIST, current, onTabSelected, "Lens")
+        TabItem(Page.MAIN, current, onTabSelected, "MAIN", Modifier.weight(1f))
+        TabItem(Page.BODYLIST, current, onTabSelected, "BODY", Modifier.weight(1f))
+        TabItem(Page.LENSLIST, current, onTabSelected, "LENS", Modifier.weight(1f))
     }
 }
