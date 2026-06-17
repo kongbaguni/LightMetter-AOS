@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import net.kongbaguni.lightmetter.model.DialModel
 
@@ -20,10 +21,11 @@ import net.kongbaguni.lightmetter.model.DialModel
 fun DialSelector(
     items: List<DialModel>,
     modifier: Modifier = Modifier,
+    initialIndex: Int = 0,
     onValueChanged: (DialModel) -> Unit
 ) {
 
-    val listState = rememberLazyListState()
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
 
     val flingBehavior = rememberSnapFlingBehavior(listState)
 
@@ -32,10 +34,11 @@ fun DialSelector(
     LaunchedEffect(listState) {
 
         snapshotFlow {
-            listState.layoutInfo.visibleItemsInfo
+            if (items.isEmpty()) null
+            else listState.layoutInfo.visibleItemsInfo
         }
+            .filterNotNull()
             .map { visibleItems ->
-
                 val layoutInfo = listState.layoutInfo
                 val center =
                     (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
@@ -48,9 +51,10 @@ fun DialSelector(
             }
             .distinctUntilChanged()
             .collectLatest { index ->
-
-                selectedIndex = index
-                onValueChanged(items[index])
+                if (index in items.indices) {
+                    selectedIndex = index
+                    onValueChanged(items[index])
+                }
             }
     }
 

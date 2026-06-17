@@ -2,5 +2,5 @@ package net.kongbaguni.lightmetter.model
 
 data class DialModel (
     val title: String,
-    val value: Double
+    val value: Any
 )
