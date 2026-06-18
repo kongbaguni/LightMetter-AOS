@@ -2,6 +2,10 @@ package net.kongbaguni.lightmetter.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+val MeterYellow = Color(0xFFFFD54F)
+val DarkGrey = Color(0xFF1E1E1E)
+val LightGrey = Color(0xFFE0E0E0)
+
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)

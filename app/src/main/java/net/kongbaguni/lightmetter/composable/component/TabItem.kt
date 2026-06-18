@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,11 +30,11 @@ fun TabItem(
     val selected = page == current
 
     val background by animateColorAsState(
-        if (selected) Color(0xFFFFD54F) else Color.Transparent
+        if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
     )
 
     val contentColor by animateColorAsState(
-        if (selected) Color.Black else Color.Gray
+        if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
     )
 
     Box(

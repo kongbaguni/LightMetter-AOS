@@ -13,16 +13,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import net.kongbaguni.lightmetter.composable.component.CameraEVCheckButton
 import net.kongbaguni.lightmetter.composable.component.ControllerUI
+import net.kongbaguni.lightmetter.model.LightMetterRange
 
 @Composable
 fun MainScreen() {
     var measuredEv by remember { mutableStateOf<Double?>(null) }
+    var meteringMode by remember { mutableStateOf(LightMetterRange.Default) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         ControllerUI(measuredEv = measuredEv)
         
         CameraEVCheckButton(
             measuredEv = measuredEv,
+            meteringMode = meteringMode,
+            onMeteringModeChange = { meteringMode = it },
             onEvMeasured = { model ->
                 measuredEv = model.getEv()
             },

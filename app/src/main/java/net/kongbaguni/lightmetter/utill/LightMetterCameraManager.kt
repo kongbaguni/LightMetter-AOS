@@ -37,8 +37,11 @@ class LightMetterCameraManager(
 
     private var finished = false
     /** 사진 측광 */
-    fun photometry(onChangeEv:(LightMetterModel)->Unit,
-              onRequestCameraPermission: () -> Unit) {
+    fun photometry(
+        range: LightMetterRange = LightMetterRange.Default,
+        onChangeEv: (LightMetterModel) -> Unit,
+        onRequestCameraPermission: () -> Unit
+    ) {
         var iso: Double? = null
         var shutter: Double? = null
         var aperture: Double? = null
@@ -52,22 +55,26 @@ class LightMetterCameraManager(
                 }
             }
         }
-        watch({ value ->
-            iso = value
-            post()
-        },
-        { value ->
-            shutter = value
-            post()
-        },
-        { value ->
-            aperture = value
-            post()
-        },
-        onRequestCameraPermission)
+        watch(
+            range = range,
+            onChangeISO = { value ->
+                iso = value
+                post()
+            },
+            onChangeShutterSpeed = { value ->
+                shutter = value
+                post()
+            },
+            onChangeAperture = { value ->
+                aperture = value
+                post()
+            },
+            onRequestCameraPermission = onRequestCameraPermission
+        )
     }
 
     private fun watch(
+        range: LightMetterRange,
         onChangeISO: (Double) -> Unit,
         onChangeShutterSpeed: (Double) -> Unit,
         onChangeAperture: (Double) -> Unit,
@@ -103,7 +110,8 @@ class LightMetterCameraManager(
                         device,
                         onChangeISO,
                         onChangeShutterSpeed,
-                        onChangeAperture
+                        onChangeAperture,
+                        range
                     )
                 }
 

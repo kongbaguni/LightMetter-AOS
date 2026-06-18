@@ -19,7 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +42,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.kongbaguni.lightmetter.model.DialModel
 import kotlin.math.log2
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
@@ -65,6 +67,50 @@ fun ControllerUI(
 
     val scope = rememberCoroutineScope()
 
+    val autoShutterValue = remember(selectAperture.value, selectIso.value, measuredEv, speedList.size) {
+        val aperture = selectAperture.value?.value as? Double
+        val iso = selectIso.value?.value as? Int
+        val mEv = measuredEv
+
+        if (aperture != null && iso != null && mEv != null) {
+            val s = iso.toDouble()
+            val n = aperture
+            val targetT = (n * n) / (2.0.pow(mEv) * (s / 100.0))
+
+            val availableSpeeds = speedList.filter { it.value != "AUTO" }
+                .map { it.value as String to parseShutterSpeed(it.value as String) }
+
+            if (availableSpeeds.isEmpty()) {
+                formatShutterSpeed(targetT)
+            } else {
+                val slowestAvailable = availableSpeeds.maxByOrNull { it.second }
+
+                if (slowestAvailable != null && targetT > slowestAvailable.second + 1e-6) {
+                    // 요구되는 노출 시간이 바디가 지원하는 가장 느린 셔터속도보다 길 때 (벌브 모드 권장)
+                    "B ${formatShutterSpeed(targetT)}"
+                } else {
+                    // 바디가 지원하는 범위 내에서 "필름이니까 올림" (더 느린 속도 중 가장 가까운 것 선택)
+                    val bestMatch = availableSpeeds
+                        .filter { it.second >= targetT - 1e-6 }
+                        .minByOrNull { it.second }
+                        ?: slowestAvailable
+
+                    bestMatch?.first ?: formatShutterSpeed(targetT)
+                }
+            }
+        } else {
+            null
+        }
+    }
+
+    LaunchedEffect(autoShutterValue) {
+        val index = speedList.indexOfFirst { it.value == "AUTO" }
+        if (index != -1) {
+            val newLabel = if (autoShutterValue != null) "A: $autoShutterValue" else "AUTO"
+            speedList[index] = DialModel(newLabel, "AUTO")
+        }
+    }
+
     val calculatedEv = remember {
         derivedStateOf {
             val aperture = selectAperture.value?.value as? Double
@@ -72,11 +118,15 @@ fun ControllerUI(
             val iso = selectIso.value?.value as? Int
 
             if (aperture != null && speedString != null && iso != null) {
-                val t = parseShutterSpeed(speedString)
-                val n = aperture
-                val s = iso.toDouble()
+                if (speedString == "AUTO") {
+                    measuredEv
+                } else {
+                    val t = parseShutterSpeed(speedString)
+                    val n = aperture
+                    val s = iso.toDouble()
 
-                log2((n * n) / t) - log2(s / 100.0)
+                    log2((n * n) / t) - log2(s / 100.0)
+                }
             } else {
                 null
             }
@@ -100,6 +150,7 @@ fun ControllerUI(
         speedList.addAll(body.shutterSpeeds.map {
             DialModel(it, it)
         })
+        speedList.add(DialModel("AUTO", "AUTO"))
 
         val savedAperture = dataStore.selectedApertureValue.first()
         initialApertureIndex.value =
@@ -116,7 +167,7 @@ fun ControllerUI(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF121212))
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -124,7 +175,7 @@ fun ControllerUI(
         // EV Display Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp)
         ) {
             Row(
@@ -139,13 +190,13 @@ fun ControllerUI(
                     Text(
                         text = "SETTING EV",
                         fontSize = 10.sp,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = calculatedEv.value?.let { "%.1f".format(it) } ?: "--.-",
                         fontSize = 32.sp,
-                        color = Color(0xFFFFD54F),
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Black
                     )
                 }
@@ -154,7 +205,7 @@ fun ControllerUI(
                     modifier = Modifier
                         .height(40.dp)
                         .width(1.dp)
-                        .background(Color.DarkGray)
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                 )
 
                 // Measured EV
@@ -162,13 +213,13 @@ fun ControllerUI(
                     Text(
                         text = "MEASURED EV",
                         fontSize = 10.sp,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = measuredEv?.let { "%.1f".format(it) } ?: "--.-",
                         fontSize = 32.sp,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Black
                     )
                 }
@@ -216,7 +267,7 @@ fun SelectorSection(
         Text(
             text = title,
             fontSize = 14.sp,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
         )
@@ -234,11 +285,25 @@ fun SelectorSection(
 }
 
 private fun parseShutterSpeed(speed: String): Double {
+    if (speed == "AUTO") return 1.0 // Should not be called for AUTO in EV calc
     return if (speed.contains("/")) {
         val parts = speed.split("/")
         parts[0].toDouble() / parts[1].toDouble()
     } else {
         speed.toDouble()
+    }
+}
+
+private fun formatShutterSpeed(seconds: Double): String {
+    return if (seconds >= 1.0) {
+        "%.1f\"".format(seconds)
+    } else {
+        val reciprocal = 1.0 / seconds
+        if (reciprocal >= 1.0) {
+            "1/${reciprocal.roundToInt()}"
+        } else {
+            "%.2f".format(seconds)
+        }
     }
 }
 
