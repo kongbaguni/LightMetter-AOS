@@ -1,63 +1,51 @@
 [
   {
+    "id": 13,
+    "brand": "Canon",
+    "name": "FD 50mm f/1.4 S.S.C.",
+    "apertures": [1.4, 2, 2.8, 4, 5.6, 8, 11, 16]
+  },
+  {
     "id": 1,
     "brand": "Leica",
     "name": "Summitar 50mm f/2",
-    "apertures": [2, 2.2, 3.2, 4.5, 6.3, 9, 12.5]
+    "apertures": [2, 2.4, 2.8, 3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16]
   },
   {
     "id": 2,
     "brand": "Leica",
     "name": "Summicron-M 35mm f/2 ASPH",
-    "apertures": [2, 2.8, 4, 5.6, 8, 11, 16]
+    "apertures": [2, 2.4, 2.8, 3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16]
   },
   {
     "id": 3,
     "brand": "Leica",
     "name": "Summicron-M 50mm f/2",
-    "apertures": [2, 2.8, 4, 5.6, 8, 11, 16]
+    "apertures": [2, 2.4, 2.8, 3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16]
   },
   {
     "id": 4,
     "brand": "Leica",
     "name": "Summilux-M 35mm f/1.4",
-    "apertures": [1.4, 2, 2.8, 4, 5.6, 8, 11, 16]
+    "apertures": [1.4, 1.7, 2, 2.4, 2.8, 3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16]
   },
   {
     "id": 5,
     "brand": "Leica",
     "name": "Noctilux-M 50mm f/0.95",
-    "apertures": [0.95, 1, 1.4, 2, 2.8, 4, 5.6, 8, 11, 16]
+    "apertures": [0.95, 1.1, 1.4, 1.7, 2, 2.4, 2.8, 3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16]
   },
   {
     "id": 6,
     "brand": "Leica",
     "name": "Elmarit-M 90mm f/2.8",
-    "apertures": [2.8, 4, 5.6, 8, 11, 16, 22]
+    "apertures": [2.8, 3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16, 19, 22]
   },
   {
-    "id": 7,
-    "brand": "Rollei",
-    "name": "Tessar 40mm f/3.5",
-    "apertures": [3.5, 4, 5.6, 8, 11, 16, 22]
-  },
-  {
-    "id": 8,
-    "brand": "Rollei",
-    "name": "Sonnar 40mm f/2.8",
-    "apertures": [2.8, 4, 5.6, 8, 11, 16, 22]
-  },
-  {
-    "id": 9,
-    "brand": "Zeiss",
-    "name": "Planar 80mm f/2.8 (Hasselblad)",
-    "apertures": [2.8, 4, 5.6, 8, 11, 16, 22]
-  },
-  {
-    "id": 10,
-    "brand": "Zeiss",
-    "name": "Distagon 50mm f/4 (Hasselblad)",
-    "apertures": [4, 5.6, 8, 11, 16, 22, 32]
+    "id": 17,
+    "brand": "Leica",
+    "name": "APO-Telyt-M 135mm f/3.4",
+    "apertures": [3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16, 19, 22]
   },
   {
     "id": 11,
@@ -72,10 +60,10 @@
     "apertures": [2, 2.8, 4, 5.6, 8, 11, 16, 22]
   },
   {
-    "id": 13,
-    "brand": "Canon",
-    "name": "FD 50mm f/1.4 S.S.C.",
-    "apertures": [1.4, 2, 2.8, 4, 5.6, 8, 11, 16]
+    "id": 15,
+    "brand": "Olympus",
+    "name": "Zuiko 50mm f/1.8",
+    "apertures": [1.8, 2.8, 4, 5.6, 8, 11, 16]
   },
   {
     "id": 14,
@@ -84,15 +72,33 @@
     "apertures": [1.7, 2.8, 4, 5.6, 8, 11, 16, 22]
   },
   {
-    "id": 15,
-    "brand": "Olympus",
-    "name": "Zuiko 50mm f/1.8",
-    "apertures": [1.8, 2.8, 4, 5.6, 8, 11, 16]
+    "id": 7,
+    "brand": "Rollei",
+    "name": "Tessar 40mm f/3.5",
+    "apertures": [3.5, 4, 5.6, 8, 11, 16, 22]
+  },
+  {
+    "id": 8,
+    "brand": "Rollei",
+    "name": "Sonnar 40mm f/2.8",
+    "apertures": [2.8, 4, 5.6, 8, 11, 16, 22]
   },
   {
     "id": 16,
     "brand": "Voigtlander",
     "name": "Nokton 35mm f/1.2 Aspherical",
     "apertures": [1.2, 1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22]
+  },
+  {
+    "id": 9,
+    "brand": "Zeiss",
+    "name": "Planar 80mm f/2.8 (Hasselblad)",
+    "apertures": [2.8, 4, 5.6, 8, 11, 16, 22]
+  },
+  {
+    "id": 10,
+    "brand": "Zeiss",
+    "name": "Distagon 50mm f/4 (Hasselblad)",
+    "apertures": [4, 5.6, 8, 11, 16, 22, 32]
   }
 ]
