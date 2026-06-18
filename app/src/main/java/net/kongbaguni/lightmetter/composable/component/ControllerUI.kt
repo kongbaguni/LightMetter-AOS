@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,9 +40,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import net.kongbaguni.lightmetter.model.BodyModel
 import net.kongbaguni.lightmetter.model.DialModel
+import net.kongbaguni.lightmetter.model.LensModel
 import kotlin.math.log2
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -62,6 +71,9 @@ fun ControllerUI(
     val initialIsoList = remember { mutableStateOf<Int?>(null) }
     val initialApertureIndex = remember { mutableStateOf<Int?>(null) }
     val initialSpeedIndex = remember { mutableStateOf<Int?>(null) }
+
+    val selectedLens = remember { mutableStateOf<LensModel?>(null) }
+    val selectedBody = remember { mutableStateOf<BodyModel?>(null) }
 
     val scope = rememberCoroutineScope()
 
@@ -138,12 +150,14 @@ fun ControllerUI(
         })
 
         val lens = dataStore.selectedLens.first()
+        selectedLens.value = lens
         apertureList.clear()
         apertureList.addAll(lens.apertures.map {
             DialModel(it.toString(), it)
         })
 
         val body = dataStore.selectedBody.first()
+        selectedBody.value = body
         speedList.clear()
         speedList.addAll(body.shutterSpeeds.map {
             DialModel(it, it)
@@ -227,6 +241,8 @@ fun ControllerUI(
         // Aperture Selector
         SelectorSection(
             title = "APERTURE (f/)",
+            subTitle = selectedLens.value?.name,
+            brand = selectedLens.value?.brand,
             items = apertureList,
             initialIndex = initialApertureIndex.value
         ) {
@@ -237,6 +253,8 @@ fun ControllerUI(
         // Shutter Speed Selector
         SelectorSection(
             title = "SHUTTER SPEED (sec)",
+            subTitle = selectedBody.value?.name,
+            brand = selectedBody.value?.brand,
             items = speedList,
             initialIndex = initialSpeedIndex.value
         ) {
@@ -257,18 +275,45 @@ fun ControllerUI(
 @Composable
 fun SelectorSection(
     title: String,
+    subTitle: String? = null,
+    brand: String? = null,
     items: List<DialModel>,
     initialIndex: Int?,
     onValueChanged: (DialModel) -> Unit
 ) {
     Column {
+
         Text(
             text = title,
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+            fontWeight = FontWeight.Bold
         )
+
+        if (subTitle != null) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (brand != null) {
+                    val brandIcon = brand.lowercase().replace(" ", "")
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data("file:///android_asset/brand_icons/$brandIcon.svg")
+                            .decoderFactory(SvgDecoder.Factory())
+                            .build(),
+                        contentDescription = brand,
+                        modifier = Modifier.size(16.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                }
+                Text(
+                    text = subTitle,
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
         initialIndex?.let { index ->
             key(index) {
                 DialSelector(
