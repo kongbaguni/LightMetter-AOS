@@ -3,6 +3,7 @@ package net.kongbaguni.lightmetter.composable.component
 import DataStore
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,7 +56,9 @@ import kotlin.math.roundToInt
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun ControllerUI(
-    measuredEv: Double? = null
+    measuredEv: Double? = null,
+    onLensClick: () -> Unit = {},
+    onBodyClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val dataStore = DataStore(context = context)
@@ -244,7 +247,8 @@ fun ControllerUI(
             subTitle = selectedLens.value?.name,
             brand = selectedLens.value?.brand,
             items = apertureList,
-            initialIndex = initialApertureIndex.value
+            initialIndex = initialApertureIndex.value,
+            onClick = onLensClick
         ) {
             selectAperture.value = it
             scope.launch { dataStore.saveAperture(it.value as Double) }
@@ -256,7 +260,8 @@ fun ControllerUI(
             subTitle = selectedBody.value?.name,
             brand = selectedBody.value?.brand,
             items = speedList,
-            initialIndex = initialSpeedIndex.value
+            initialIndex = initialSpeedIndex.value,
+            onClick = onBodyClick
         ) {
             selectSpeed.value = it
             scope.launch { dataStore.saveShutterSpeed(it.value as String) }
@@ -279,6 +284,7 @@ fun SelectorSection(
     brand: String? = null,
     items: List<DialModel>,
     initialIndex: Int?,
+    onClick: (() -> Unit)? = null,
     onValueChanged: (DialModel) -> Unit
 ) {
     Column {
@@ -291,7 +297,10 @@ fun SelectorSection(
         )
 
         if (subTitle != null) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 if (brand != null) {
                     val brandIcon = brand.lowercase().replace(" ", "")
                     AsyncImage(

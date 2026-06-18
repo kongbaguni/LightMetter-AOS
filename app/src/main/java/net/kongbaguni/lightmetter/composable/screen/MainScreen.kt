@@ -16,12 +16,16 @@ import net.kongbaguni.lightmetter.composable.component.ControllerUI
 import net.kongbaguni.lightmetter.model.LightMetterRange
 
 @Composable
-fun MainScreen() {
+fun MainScreen(onNavigate: (Page) -> Unit) {
     var measuredEv by remember { mutableStateOf<Double?>(null) }
     var meteringMode by remember { mutableStateOf(LightMetterRange.Default) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        ControllerUI(measuredEv = measuredEv)
+        ControllerUI(
+            measuredEv = measuredEv,
+            onLensClick = { onNavigate(Page.LENSLIST) },
+            onBodyClick = { onNavigate(Page.BODYLIST) }
+        )
         
         CameraEVCheckButton(
             measuredEv = measuredEv,

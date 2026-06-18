@@ -28,7 +28,23 @@ class DataStore(context: Context) {
         private val APERTURE_VALUE = doublePreferencesKey("aperture_value")
         private val SHUTTER_SPEED_VALUE = stringPreferencesKey("shutter_speed_value")
         private val ISO_VALUE = intPreferencesKey("iso_value")
+        private val SELECTED_BRAND = stringPreferencesKey("selected_brand")
     }
+
+    /** 브랜드 필터 저장 */
+    suspend fun saveSelectedBrand(brand: String?) {
+        dataStore.edit {
+            if (brand == null) {
+                it.remove(SELECTED_BRAND)
+            } else {
+                it[SELECTED_BRAND] = brand
+            }
+        }
+    }
+
+    /** 선택된 브랜드 필터 */
+    val selectedBrand: Flow<String?> =
+        dataStore.data.map { it[SELECTED_BRAND] }
 
     /** ISO 저장 */
     suspend fun saveIso(value: Int) {

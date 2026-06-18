@@ -31,7 +31,7 @@ fun ContentScreen(context: Context, modifier: Modifier) {
         )
 
         when (currentPage) {
-            Page.MAIN -> MainScreen()
+            Page.MAIN -> MainScreen(onNavigate = { currentPage = it })
             Page.BODYLIST -> BodyListScreen()
             Page.LENSLIST -> LensListScreen()
         }
