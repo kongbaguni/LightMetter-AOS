@@ -175,12 +175,6 @@ fun ControllerUI(
             }
         }
 
-        // ISO Selector
-        SelectorSection(title = "ISO", items = isoList, initialIndex = initialIsoList.value) {
-            selectIso.value = it
-            scope.launch { dataStore.saveIso(it.value as Int) }
-        }
-
         // Aperture Selector
         SelectorSection(
             title = "APERTURE (f/)",
@@ -199,6 +193,12 @@ fun ControllerUI(
         ) {
             selectSpeed.value = it
             scope.launch { dataStore.saveShutterSpeed(it.value as String) }
+        }
+
+        // ISO Selector
+        SelectorSection(title = "ISO", items = isoList, initialIndex = initialIsoList.value) {
+            selectIso.value = it
+            scope.launch { dataStore.saveIso(it.value as Int) }
         }
 
         Spacer(modifier = Modifier.height(100.dp))

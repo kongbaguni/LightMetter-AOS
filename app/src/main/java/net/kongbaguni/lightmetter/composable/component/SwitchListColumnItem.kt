@@ -18,6 +18,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import androidx.compose.ui.text.style.TextOverflow
+
 @Composable
 fun SwitchListColumnItem(
     brand: String,
@@ -40,22 +42,30 @@ fun SwitchListColumnItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = brand,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Light,
-                    color = if (isSelected) Color.Black else Color.Gray
+                    color = if (isSelected) Color.Black else Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = name,
                     fontSize = 18.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isSelected) Color.Black else Color.White
+                    color = if (isSelected) Color.Black else Color.White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
-            ToggleSwitch(isSelected, onClick)
+            ToggleSwitch(
+                checked = isSelected,
+                onCheckedChange = onClick,
+                modifier = Modifier.padding(start = 16.dp)
+            )
         }
     }
 }
