@@ -1,3 +1,5 @@
+package net.kongbaguni.lightmetter.composable.component
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import net.kongbaguni.lightmetter.model.DialModel
+import kotlin.math.abs
 
 @Composable
 fun DialSelector(
@@ -44,7 +47,7 @@ fun DialSelector(
                     (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
 
                 visibleItems.minByOrNull {
-                    kotlin.math.abs(
+                    abs(
                         (it.offset + it.size / 2) - center
                     )
                 }?.index ?: 0
@@ -89,6 +92,7 @@ fun DialSelector(
 
                     Text(
                         text = item.title,
+                        color = Color.Black,
                         textAlign = TextAlign.Center
                     )
                 }
