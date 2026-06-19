@@ -108,6 +108,48 @@
     "apertures": [3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16, 19, 22]
   },
   {
+    "id": 39,
+    "brand": "Leica",
+    "name": "Elmarit-M 28mm f/2.8 ASPH",
+    "apertures": [2.8, 3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16, 19, 22]
+  },
+  {
+    "id": 40,
+    "brand": "Leica",
+    "name": "Summicron-M 28mm f/2 ASPH",
+    "apertures": [2, 2.4, 2.8, 3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16]
+  },
+  {
+    "id": 41,
+    "brand": "Leica",
+    "name": "Summilux-M 50mm f/1.4 ASPH",
+    "apertures": [1.4, 1.7, 2, 2.4, 2.8, 3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16]
+  },
+  {
+    "id": 42,
+    "brand": "Leica",
+    "name": "APO-Summicron-M 75mm f/2 ASPH",
+    "apertures": [2, 2.4, 2.8, 3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16]
+  },
+  {
+    "id": 43,
+    "brand": "Leica",
+    "name": "APO-Summicron-M 90mm f/2 ASPH",
+    "apertures": [2, 2.4, 2.8, 3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16]
+  },
+  {
+    "id": 44,
+    "brand": "Leica",
+    "name": "Elmar-M 50mm f/2.8",
+    "apertures": [2.8, 3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16]
+  },
+  {
+    "id": 45,
+    "brand": "Leica",
+    "name": "Super-Elmar-M 21mm f/3.4 ASPH",
+    "apertures": [3.4, 4, 4.8, 5.6, 6.7, 8, 9.5, 11, 13, 16]
+  },
+  {
     "id": 19,
     "brand": "Mamiya",
     "name": "Sekor C 90mm f/3.8 (RB67)",
