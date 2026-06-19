@@ -10,6 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,7 +39,10 @@ fun SwitchListColumnItem(
     brand: String,
     name: String,
     isSelected: Boolean,
-    onClick: (Boolean) -> Unit
+    isCustom: Boolean = false,
+    onClick: (Boolean) -> Unit,
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {}
 ) {
     val context = LocalContext.current
     
@@ -78,12 +86,9 @@ fun SwitchListColumnItem(
                         contentDescription = brand,
                         modifier = Modifier.size(40.dp),
                         contentScale = ContentScale.Fit,
-                        error = null, // 에러 시 아래 fallback Surface가 보이게 됨
+                        error = null,
                     )
                     
-                    // 이미지가 없거나 로딩 중일 때 보여줄 대체 UI (첫 글자 표시)
-                    // AsyncImage의 success 여부를 직접 체크하기 어려우므로 
-                    // 아래 레이어에 깔아두는 방식으로 처리
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.surfaceVariant,
@@ -99,7 +104,6 @@ fun SwitchListColumnItem(
                         }
                     }
                     
-                    // AsyncImage를 Surface 위에 다시 그려서 로드 성공 시 가리도록 함
                     AsyncImage(
                         model = ImageRequest.Builder(context)
                             .data(iconPath)
@@ -131,11 +135,22 @@ fun SwitchListColumnItem(
                 }
             }
 
-            ToggleSwitch(
-                checked = isSelected,
-                onCheckedChange = onClick,
-                modifier = Modifier.padding(start = 16.dp)
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (isCustom) {
+                    IconButton(onClick = onEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(20.dp))
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(20.dp))
+                    }
+                }
+                
+                ToggleSwitch(
+                    checked = isSelected,
+                    onCheckedChange = onClick,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
         }
     }
 }

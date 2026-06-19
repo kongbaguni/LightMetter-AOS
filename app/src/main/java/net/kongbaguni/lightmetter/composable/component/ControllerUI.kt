@@ -1,6 +1,6 @@
 package net.kongbaguni.lightmetter.composable.component
 
-import DataStore
+import net.kongbaguni.lightmetter.utill.DataStore
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

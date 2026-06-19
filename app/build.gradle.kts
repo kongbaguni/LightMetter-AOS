@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.ksp)
     id("com.google.gms.google-services") apply false
     id("com.google.firebase.crashlytics") apply false
 }
@@ -19,7 +20,6 @@ android {
     defaultConfig {
         applicationId = "net.kongbaguni.lightmetter"
         minSdk = 23
-        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -70,4 +70,7 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
 
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 }

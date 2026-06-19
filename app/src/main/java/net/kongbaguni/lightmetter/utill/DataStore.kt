@@ -1,10 +1,17 @@
+package net.kongbaguni.lightmetter.utill
+
 import android.content.Context
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import net.kongbaguni.lightmetter.data.AppDatabase
+import net.kongbaguni.lightmetter.data.LightMetterRepository
 import net.kongbaguni.lightmetter.extensions.dataStore
 import net.kongbaguni.lightmetter.model.BodyModel
 import net.kongbaguni.lightmetter.model.BodyUiState
@@ -15,13 +22,17 @@ import net.kongbaguni.lightmetter.model.LensUiState
 class DataStore(context: Context) {
 
     private val dataStore = context.dataStore
-
-    val bodyList: List<BodyModel> = BodyModel.load(context)
-    val lensList: List<LensModel> = LensModel.load(context)
+    private val database = AppDatabase.getDatabase(context)
+    val repository = LightMetterRepository(
+        context,
+        database.bodyDao(),
+        database.lensDao()
+    )
 
     val isoList: List<IsoModel> = listOf(
         6, 12, 25, 32, 40, 50, 64, 80, 100, 125, 160, 200, 250, 320, 400, 500, 640, 800, 1000, 1250, 1600, 3200, 6400
     ).map { IsoModel(it) }
+
     companion object {
         private val BODY_ID = intPreferencesKey("body_id")
         private val LENS_ID = intPreferencesKey("lens_id")
@@ -95,24 +106,22 @@ class DataStore(context: Context) {
 
     /** 선택된 Body */
     val selectedBody: Flow<BodyModel> =
-        dataStore.data.map { prefs ->
+        combine(dataStore.data, repository.getAllBodies()) { prefs, bodyList ->
             val id = prefs[BODY_ID]
-            bodyList.firstOrNull { it.id == id } ?: bodyList.first()
+            bodyList.firstOrNull { it.id == id } ?: bodyList.firstOrNull() ?: BodyModel(0, "", "", emptyList())
         }
 
     /** 선택된 Lens */
     val selectedLens: Flow<LensModel> =
-        dataStore.data.map { prefs ->
+        combine(dataStore.data, repository.getAllLenses()) { prefs, lensList ->
             val id = prefs[LENS_ID]
-            lensList.firstOrNull { it.id == id } ?: lensList.first()
+            lensList.firstOrNull { it.id == id } ?: lensList.firstOrNull() ?: LensModel(0, "", "", emptyList())
         }
 
     val bodyUiState: Flow<BodyUiState> =
-        dataStore.data.map { prefs ->
+        combine(dataStore.data, repository.getAllBodies()) { prefs, bodyList ->
             val id = prefs[BODY_ID]
-
-            val selected = bodyList.find { it.id == id }
-                ?: bodyList.firstOrNull()
+            val selected = bodyList.find { it.id == id } ?: bodyList.firstOrNull()
 
             BodyUiState(
                 bodies = bodyList,
@@ -121,16 +130,13 @@ class DataStore(context: Context) {
         }
 
     val lensUiState: Flow<LensUiState> =
-        dataStore.data.map { prefs ->
+        combine(dataStore.data, repository.getAllLenses()) { prefs, lensList ->
             val id = prefs[LENS_ID]
-
-            val selected = lensList.find { it.id == id }
-                ?: lensList.firstOrNull()
+            val selected = lensList.find { it.id == id } ?: lensList.firstOrNull()
 
             LensUiState(
                 lensList = lensList,
                 selected = selected
             )
         }
-
 }

@@ -1,6 +1,6 @@
 package net.kongbaguni.lightmetter.composable.screen
 
-import DataStore
+import net.kongbaguni.lightmetter.utill.DataStore
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,9 +30,21 @@ import net.kongbaguni.lightmetter.R.string.lens_list
 import net.kongbaguni.lightmetter.composable.component.SwitchListColumnItem
 import net.kongbaguni.lightmetter.model.LensUiState
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.Alignment
+import net.kongbaguni.lightmetter.model.LensModel
+
 @Composable
-fun LensListScreen() {
-    val dataStore = DataStore(context = androidx.compose.ui.platform.LocalContext.current)
+fun LensListScreen(
+    onAddLens: () -> Unit = {},
+    onEditLens: (LensModel) -> Unit = {}
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val dataStore = remember { DataStore(context = context) }
     val scope = rememberCoroutineScope()
     
     val lensUiState by dataStore.lensUiState.collectAsState(
@@ -58,13 +70,22 @@ fun LensListScreen() {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        Text(
-            text = stringResource(lens_list),
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(16.dp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(lens_list),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(16.dp)
+            )
+            IconButton(onClick = onAddLens, modifier = Modifier.padding(end = 16.dp)) {
+                Icon(Icons.Default.Add, contentDescription = "Add Lens")
+            }
+        }
 
         LazyRow(
             modifier = Modifier
@@ -114,9 +135,16 @@ fun LensListScreen() {
                         brand = item.brand,
                         name = item.name,
                         isSelected = item == lensUiState.selected,
+                        isCustom = item.id >= 10000,
                         onClick = {
                             scope.launch {
                                 dataStore.saveLens(item)
+                            }
+                        },
+                        onEdit = { onEditLens(item) },
+                        onDelete = {
+                            scope.launch {
+                                dataStore.repository.deleteLens(item.id)
                             }
                         }
                     )
