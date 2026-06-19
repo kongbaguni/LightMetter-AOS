@@ -248,6 +248,14 @@ fun ControllerUI(
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Black
                     )
+                    if (filter != null) {
+                        Text(
+                            text = filter.name,
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
