@@ -2,4 +2,8 @@
     <string name="app_name">lightMetter</string>
     <string name="body_list">body list</string>
     <string name="lens_list">lens list</string>
+    <string name="delete_confirm_title">Delete</string>
+    <string name="delete_confirm_message">Are you sure you want to delete this item?</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
 </resources>

@@ -14,6 +14,12 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -50,6 +56,36 @@ fun LensListScreen(
     val lensUiState by dataStore.lensUiState.collectAsState(
         initial = LensUiState()
     )
+
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var itemToDeleteId by remember { mutableStateOf<Int?>(null) }
+
+    if (showDeleteConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            title = { Text(stringResource(net.kongbaguni.lightmetter.R.string.delete_confirm_title)) },
+            text = { Text(stringResource(net.kongbaguni.lightmetter.R.string.delete_confirm_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        itemToDeleteId?.let { id ->
+                            scope.launch {
+                                dataStore.repository.deleteLens(id)
+                            }
+                        }
+                        showDeleteConfirmDialog = false
+                    }
+                ) {
+                    Text(stringResource(net.kongbaguni.lightmetter.R.string.confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                    Text(stringResource(net.kongbaguni.lightmetter.R.string.cancel))
+                }
+            }
+        )
+    }
 
     val selectedBrand by dataStore.selectedBrand.collectAsState(initial = null)
 
@@ -143,9 +179,8 @@ fun LensListScreen(
                         },
                         onEdit = { onEditLens(item) },
                         onDelete = {
-                            scope.launch {
-                                dataStore.repository.deleteLens(item.id)
-                            }
+                            itemToDeleteId = item.id
+                            showDeleteConfirmDialog = true
                         }
                     )
                 }

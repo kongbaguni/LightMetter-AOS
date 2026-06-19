@@ -19,6 +19,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,6 +57,36 @@ fun BodyListScreen(
     val selectedBrand by dataStore.selectedBrand.collectAsState(initial = null)
 
     val scope = rememberCoroutineScope()
+
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var itemToDeleteId by remember { mutableStateOf<Int?>(null) }
+
+    if (showDeleteConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            title = { Text(stringResource(R.string.delete_confirm_title)) },
+            text = { Text(stringResource(R.string.delete_confirm_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        itemToDeleteId?.let { id ->
+                            scope.launch {
+                                dataStore.repository.deleteBody(id)
+                            }
+                        }
+                        showDeleteConfirmDialog = false
+                    }
+                ) {
+                    Text(stringResource(R.string.confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 
     val brands = remember(bodyUiState.bodies) {
         bodyUiState.bodies.map { it.brand }.distinct().sorted()
@@ -135,9 +171,8 @@ fun BodyListScreen(
                     },
                     onEdit = { onEditBody(item) },
                     onDelete = {
-                        scope.launch {
-                            dataStore.repository.deleteBody(item.id)
-                        }
+                        itemToDeleteId = item.id
+                        showDeleteConfirmDialog = true
                     }
                 )
             }
