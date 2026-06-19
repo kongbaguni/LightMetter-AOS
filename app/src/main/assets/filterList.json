@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "name": "Yellow (K2)",
+    "stop": 1.0,
+    "color": "#FFFFCC00"
+  },
+  {
+    "id": 2,
+    "name": "Orange (G)",
+    "stop": 2.0,
+    "color": "#FFFF6600"
+  },
+  {
+    "id": 3,
+    "name": "Red (25A)",
+    "stop": 3.0,
+    "color": "#FFFF0000"
+  },
+  {
+    "id": 4,
+    "name": "Green (X1)",
+    "stop": 2.0,
+    "color": "#FF00FF00"
+  },
+  {
+    "id": 5,
+    "name": "Yellow-Green (X0)",
+    "stop": 1.5,
+    "color": "#FF99FF33"
+  },
+  {
+    "id": 101,
+    "name": "ND2 (0.3)",
+    "stop": 1.0,
+    "color": "#80808080"
+  },
+  {
+    "id": 102,
+    "name": "ND4 (0.6)",
+    "stop": 2.0,
+    "color": "#70808080"
+  },
+  {
+    "id": 103,
+    "name": "ND8 (0.9)",
+    "stop": 3.0,
+    "color": "#60808080"
+  },
+  {
+    "id": 104,
+    "name": "ND16 (1.2)",
+    "stop": 4.0,
+    "color": "#50808080"
+  },
+  {
+    "id": 105,
+    "name": "ND32 (1.5)",
+    "stop": 5.0,
+    "color": "#40808080"
+  },
+  {
+    "id": 106,
+    "name": "ND64 (1.8)",
+    "stop": 6.0,
+    "color": "#30808080"
+  },
+  {
+    "id": 107,
+    "name": "ND1000 (3.0)",
+    "stop": 10.0,
+    "color": "#20808080"
+  }
+]

@@ -5,16 +5,20 @@ import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import net.kongbaguni.lightmetter.data.AppDatabase
 import net.kongbaguni.lightmetter.data.LightMetterRepository
 import net.kongbaguni.lightmetter.extensions.dataStore
 import net.kongbaguni.lightmetter.model.BodyModel
 import net.kongbaguni.lightmetter.model.BodyUiState
+import net.kongbaguni.lightmetter.model.FilterModel
 import net.kongbaguni.lightmetter.model.IsoModel
 import net.kongbaguni.lightmetter.model.LensModel
 import net.kongbaguni.lightmetter.model.LensUiState
@@ -33,6 +37,13 @@ class DataStore(context: Context) {
         6, 12, 25, 32, 40, 50, 64, 80, 100, 125, 160, 200, 250, 320, 400, 500, 640, 800, 1000, 1250, 1600, 3200, 6400
     ).map { IsoModel(it) }
 
+    val filterList: List<FilterModel> = try {
+        val json = context.assets.open("filterList.json").bufferedReader().use { it.readText() }
+        Gson().fromJson(json, object : TypeToken<List<FilterModel>>() {}.type)
+    } catch (e: Exception) {
+        emptyList()
+    }
+
     companion object {
         private val BODY_ID = intPreferencesKey("body_id")
         private val LENS_ID = intPreferencesKey("lens_id")
@@ -40,6 +51,7 @@ class DataStore(context: Context) {
         private val SHUTTER_SPEED_VALUE = stringPreferencesKey("shutter_speed_value")
         private val ISO_VALUE = intPreferencesKey("iso_value")
         private val SELECTED_BRAND = stringPreferencesKey("selected_brand")
+        private val FILTER_ID = intPreferencesKey("filter_id")
     }
 
     /** 브랜드 필터 저장 */
@@ -104,6 +116,17 @@ class DataStore(context: Context) {
         }
     }
 
+    /** Filter 저장 */
+    suspend fun saveFilter(filter: FilterModel?) {
+        dataStore.edit {
+            if (filter == null) {
+                it.remove(FILTER_ID)
+            } else {
+                it[FILTER_ID] = filter.id
+            }
+        }
+    }
+
     /** 선택된 Body */
     val selectedBody: Flow<BodyModel> =
         combine(dataStore.data, repository.getAllBodies()) { prefs, bodyList ->
@@ -116,6 +139,13 @@ class DataStore(context: Context) {
         combine(dataStore.data, repository.getAllLenses()) { prefs, lensList ->
             val id = prefs[LENS_ID]
             lensList.firstOrNull { it.id == id } ?: lensList.firstOrNull() ?: LensModel(0, "", "", emptyList())
+        }
+
+    /** 선택된 Filter */
+    val selectedFilter: Flow<FilterModel?> =
+        dataStore.data.map { prefs ->
+            val id = prefs[FILTER_ID]
+            filterList.find { it.id == id }
         }
 
     val bodyUiState: Flow<BodyUiState> =

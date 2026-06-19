@@ -26,9 +26,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,8 +41,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+import net.kongbaguni.lightmetter.model.FilterModel
 import net.kongbaguni.lightmetter.model.LightMetterModel
 import net.kongbaguni.lightmetter.model.LightMetterRange
+import net.kongbaguni.lightmetter.utill.DataStore
 import net.kongbaguni.lightmetter.utill.LightMetterCameraManager
 
 @Composable
@@ -54,6 +59,22 @@ fun CameraEVCheckButton(
     val context = LocalContext.current
     val isPreview = LocalInspectionMode.current
     var showMeteringSelector by remember { mutableStateOf(false) }
+    var showFilterSelector by remember { mutableStateOf(false) }
+
+    val dataStore = remember { DataStore(context) }
+    val scope = rememberCoroutineScope()
+    val selectedFilter by dataStore.selectedFilter.collectAsState(initial = null)
+
+    if (showFilterSelector) {
+        FilterSelectorDialog(
+            filters = dataStore.filterList,
+            selectedFilter = selectedFilter,
+            onFilterSelected = { filter ->
+                scope.launch { dataStore.saveFilter(filter) }
+            },
+            onDismiss = { showFilterSelector = false }
+        )
+    }
 
     val lightMetterCameraManager = remember {
         if (!isPreview) LightMetterCameraManager(context) else null
@@ -121,8 +142,36 @@ fun CameraEVCheckButton(
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Invisible spacer to balance the IconButton on the right
-            Box(modifier = Modifier.size(48.dp))
+            // Filter Selection Button
+            IconButton(
+                onClick = { showFilterSelector = true },
+                modifier = Modifier
+                    .padding(end = 16.dp)
+                    .size(48.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = CircleShape
+                    )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(
+                            color = try {
+                                selectedFilter?.color?.let { Color(android.graphics.Color.parseColor(it)) } ?: Color.Transparent
+                            } catch (e: Exception) {
+                                Color.Transparent
+                            },
+                            shape = CircleShape
+                        )
+                        .then(
+                            if (selectedFilter == null) Modifier.background(
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                                CircleShape
+                            ) else Modifier
+                        )
+                )
+            }
 
             Button(
                 onClick = {

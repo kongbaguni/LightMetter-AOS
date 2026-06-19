@@ -48,7 +48,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.kongbaguni.lightmetter.model.BodyModel
 import net.kongbaguni.lightmetter.model.DialModel
+import net.kongbaguni.lightmetter.model.FilterModel
 import net.kongbaguni.lightmetter.model.LensModel
+import androidx.compose.runtime.collectAsState
 import kotlin.math.log2
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -77,18 +79,22 @@ fun ControllerUI(
 
     val selectedLens = remember { mutableStateOf<LensModel?>(null) }
     val selectedBody = remember { mutableStateOf<BodyModel?>(null) }
+    val selectedFilter = dataStore.selectedFilter.collectAsState(initial = null)
 
     val scope = rememberCoroutineScope()
 
-    val autoShutterValue = remember(selectAperture.value, selectIso.value, measuredEv, speedList.size) {
+    val autoShutterValue = remember(selectAperture.value, selectIso.value, measuredEv, speedList.size, selectedFilter.value) {
         val aperture = selectAperture.value?.value as? Double
         val iso = selectIso.value?.value as? Int
         val mEv = measuredEv
+        val filterStop = selectedFilter.value?.stop ?: 0.0
 
         if (aperture != null && iso != null && mEv != null) {
             val s = iso.toDouble()
             val n = aperture
-            val targetT = (n * n) / (2.0.pow(mEv) * (s / 100.0))
+            // 필터의 stop 만큼 노출 시간을 늘려야 함 (EV를 낮추는 효과)
+            val effectiveEv = mEv - filterStop
+            val targetT = (n * n) / (2.0.pow(effectiveEv) * (s / 100.0))
 
             val availableSpeeds = speedList.filter { it.value != "AUTO" }
                 .map { it.value as String to parseShutterSpeed(it.value as String) }
@@ -129,16 +135,19 @@ fun ControllerUI(
             val aperture = selectAperture.value?.value as? Double
             val speedString = selectSpeed.value?.value as? String
             val iso = selectIso.value?.value as? Int
+            val filterStop = selectedFilter.value?.stop ?: 0.0
 
             if (aperture != null && speedString != null && iso != null) {
                 if (speedString == "AUTO") {
-                    measuredEv
+                    measuredEv?.let { it - filterStop }
                 } else {
                     val t = parseShutterSpeed(speedString)
                     val n = aperture
                     val s = iso.toDouble()
 
-                    log2((n * n) / t) - log2(s / 100.0)
+                    val ev = log2((n * n) / t) - log2(s / 100.0)
+                    // 필터가 장착된 상태에서의 설정된 EV 값
+                    ev
                 }
             } else {
                 null
@@ -225,14 +234,16 @@ fun ControllerUI(
 
                 // Measured EV
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val filter = selectedFilter.value
+                    val filterStop = filter?.stop ?: 0.0
                     Text(
-                        text = "MEASURED EV",
+                        text = if (filter != null) "FILTERED EV" else "MEASURED EV",
                         fontSize = 10.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = measuredEv?.let { "%.1f".format(it) } ?: "--.-",
+                        text = measuredEv?.let { "%.1f".format(it - filterStop) } ?: "--.-",
                         fontSize = 32.sp,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Black
