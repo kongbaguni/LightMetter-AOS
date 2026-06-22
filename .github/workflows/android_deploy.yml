@@ -2,9 +2,9 @@ name: Android Build & Deploy
 
 on:
   push:
-    branches: [ "main" ] # 메인 브랜치에 푸시될 때 실행
+    branches: [ "main" ]
     tags:
-      - 'v*' # v1.0.0 같은 태그가 푸시될 때 실행
+      - 'v*'
   pull_request:
     branches: [ "main" ]
 
@@ -34,34 +34,34 @@ jobs:
             echo "GOOGLE_SERVICES_JSON secret is not set. Building without Google Services."
           fi
 
-      # 1. 빌드 테스트 (PR 및 푸시 시 공통)
+      # 1. 빌드 테스트
       - name: Build with Gradle
         run: ./gradlew assembleDebug
 
-      # 2. 배포용 AAB 빌드 (태그 푸시 시 실행 추천, 여기서는 메인 브랜치 푸시 시에도 빌드하도록 설정)
+      # 2. 배포용 AAB 빌드
       - name: Build Release AAB
         if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
         run: ./gradlew :app:bundleRelease
 
       # 3. 서명 (GitHub Secrets 설정 필요)
-      # r0adkll/sign-android-release 액션 등을 사용하여 나중에 추가 가능
-      # - name: Sign AAB
-      #   if: startsWith(github.ref, 'refs/tags/v')
-      #   uses: r0adkll/sign-android-release@v1
-      #   id: sign_app
-      #   with:
-      #     releaseDirectory: app/build/outputs/bundle/release
-      #     signingKeyBase64: ${{ secrets.RELEASE_KEYSTORE }}
-      #     alias: ${{ secrets.KEY_ALIAS }}
-      #     keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-      #     keyPassword: ${{ secrets.KEY_PASSWORD }}
+      - name: Sign AAB
+        if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
+        with:
+          releaseDirectory: app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.RELEASE_KEYSTORE }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      # 4. Google Play 업로드 (GitHub Secrets 설정 필요)
-      # - name: Upload to Google Play
-      #   if: startsWith(github.ref, 'refs/tags/v')
-      #   uses: r0adkll/upload-google-play@v4
-      #   with:
-      #     serviceAccountJsonKeyData: ${{ secrets.SERVICE_ACCOUNT_JSON }}
-      #     packageName: net.kongbaguni.lightmetter
-      #     releaseFiles: ${{ steps.sign_app.outputs.signedReleaseFile }}
-      #     track: internal
+      # 4. Google Play 업로드 (내부 테스트 트랙)
+      - name: Upload to Google Play
+        if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
+        uses: r0adkll/upload-google-play@v4
+        with:
+          serviceAccountJsonKeyData: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: net.kongbaguni.lightmetter
+          releaseFiles: ${{ steps.sign_app.outputs.signedReleaseFile }}
+          track: internal
+          status: completed
