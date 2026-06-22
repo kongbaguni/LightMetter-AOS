@@ -65,4 +65,3 @@ jobs:
           releaseFiles: ${{ steps.sign_app.outputs.signedReleaseFile }}
           track: internal
           status: completed
-          changesNotSentForReview: true
