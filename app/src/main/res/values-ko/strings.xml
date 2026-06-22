@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">필카노출계</string>
+    <string name="body_list">바디 목록</string>
+    <string name="lens_list">렌즈 목록</string>
+    <string name="delete_confirm_title">삭제</string>
+    <string name="delete_confirm_message">정말 삭제하시겠습니까?</string>
+    <string name="confirm">확인</string>
+    <string name="cancel">취소</string>
+</resources>
