@@ -2,7 +2,9 @@ package net.kongbaguni.lightmetter.composable.screen
 
 import android.content.Context
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -11,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import net.kongbaguni.lightmetter.composable.component.AdBanner
 import net.kongbaguni.lightmetter.composable.component.TabBar
 import net.kongbaguni.lightmetter.model.BodyModel
 import net.kongbaguni.lightmetter.model.LensModel
@@ -32,6 +35,9 @@ fun ContentScreen(context: Context, modifier: Modifier) {
             .padding(5.dp)
             .fillMaxSize()
     ) {
+        AdBanner()
+        Spacer(modifier = Modifier.height(8.dp))
+
         if (currentPage != Page.BODY_EDIT && currentPage != Page.LENS_EDIT) {
             TabBar(
                 current = currentPage,
