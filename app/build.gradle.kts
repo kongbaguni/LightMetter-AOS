@@ -17,11 +17,15 @@ android {
     namespace = "net.kongbaguni.lightmetter"
     compileSdk = 37
 
+    val baseVersionCode = 1
+    val baseVersionName = "1.0.0"
+    val githubRunNumber = System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 0
+
     defaultConfig {
         applicationId = "net.kongbaguni.lightmetter"
         minSdk = 23
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = baseVersionCode + githubRunNumber
+        versionName = if (githubRunNumber > 0) "$baseVersionName.$githubRunNumber" else baseVersionName
         targetSdk = 37
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
