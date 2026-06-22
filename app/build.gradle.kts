@@ -18,7 +18,7 @@ android {
     compileSdk = 37
 
     val baseVersionCode = 1
-    val baseVersionName = "1.0.0"
+    val baseVersionName = "1.0"
     val githubRunNumber = System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 0
 
     defaultConfig {
