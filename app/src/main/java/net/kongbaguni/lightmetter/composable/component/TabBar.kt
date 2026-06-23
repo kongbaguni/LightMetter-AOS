@@ -29,5 +29,6 @@ fun TabBar(
         TabItem(Page.MAIN, current, onTabSelected, "MAIN", Modifier.weight(1f))
         TabItem(Page.BODYLIST, current, onTabSelected, "BODY", Modifier.weight(1f))
         TabItem(Page.LENSLIST, current, onTabSelected, "LENS", Modifier.weight(1f))
+        TabItem(Page.SETTINGS, current, onTabSelected, "SETTING", Modifier.weight(1f))
     }
 }

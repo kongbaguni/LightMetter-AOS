@@ -27,7 +27,7 @@ import net.kongbaguni.lightmetter.model.LensModel
 import net.kongbaguni.lightmetter.utill.DataStore
 
 enum class Page {
-    MAIN, BODYLIST, LENSLIST, BODY_EDIT, LENS_EDIT
+    MAIN, BODYLIST, LENSLIST, BODY_EDIT, LENS_EDIT, SETTINGS
 }
 
 @Composable
@@ -42,7 +42,7 @@ fun ContentScreen(context: Context, modifier: Modifier) {
         when (currentPage) {
             Page.BODY_EDIT -> currentPage = Page.BODYLIST
             Page.LENS_EDIT -> currentPage = Page.LENSLIST
-            Page.BODYLIST, Page.LENSLIST -> currentPage = Page.MAIN
+            Page.BODYLIST, Page.LENSLIST, Page.SETTINGS -> currentPage = Page.MAIN
             Page.MAIN -> showExitDialog = true
         }
     }
@@ -115,6 +115,10 @@ fun ContentScreen(context: Context, modifier: Modifier) {
                 dataStore = dataStore,
                 lensToEdit = lensToEdit,
                 onBack = { currentPage = Page.LENSLIST }
+            )
+            Page.SETTINGS -> SettingsScreen(
+                dataStore = dataStore,
+                onBack = { currentPage = Page.MAIN }
             )
         }
     }

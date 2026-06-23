@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,10 +21,16 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import net.kongbaguni.lightmetter.BuildConfig
+import net.kongbaguni.lightmetter.utill.DataStore
 
 @Composable
 fun AdBanner(modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val dataStore = remember { DataStore(context) }
+    val isAdFree by dataStore.isAdFree.collectAsState(initial = false)
+
+    if (isAdFree) return
+
     val width = LocalConfiguration.current.screenWidthDp
     val adSize = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, width)
     val adHeight = adSize.height

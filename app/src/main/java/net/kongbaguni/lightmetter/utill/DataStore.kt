@@ -54,7 +54,19 @@ class DataStore(context: Context) {
         private val SELECTED_BRAND = stringPreferencesKey("selected_brand")
         private val FILTER_ID = intPreferencesKey("filter_id")
         private val SHOW_PREVIEW = booleanPreferencesKey("show_preview")
+        private val IS_AD_FREE = booleanPreferencesKey("is_ad_free")
     }
+
+    /** 광고 제거 여부 저장 */
+    suspend fun saveAdFree(isAdFree: Boolean) {
+        dataStore.edit {
+            it[IS_AD_FREE] = isAdFree
+        }
+    }
+
+    /** 광고 제거 여부 */
+    val isAdFree: Flow<Boolean> =
+        dataStore.data.map { it[IS_AD_FREE] ?: false }
 
     /** 미리보기 표시 여부 저장 */
     suspend fun saveShowPreview(show: Boolean) {
