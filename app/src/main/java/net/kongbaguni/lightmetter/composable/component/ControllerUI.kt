@@ -162,9 +162,10 @@ fun ControllerUI(
 
     LaunchedEffect(Unit) {
         isoList.clear()
-        isoList.addAll(dataStore.isoList.map {
+        val rawIsoList = dataStore.isoList.map {
             DialModel(it.title(), it.value)
-        })
+        }
+        isoList.addAll(rawIsoList.reversed())
 
         val lens = dataStore.selectedLens.first()
         selectedLens.value = lens

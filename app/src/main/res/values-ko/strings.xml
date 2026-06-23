@@ -24,4 +24,6 @@
     <string name="metering_average">평균</string>
     <string name="metering_spot">스팟</string>
     <string name="metering_center">중앙</string>
+    <string name="exit_confirm_title">종료</string>
+    <string name="exit_confirm_message">앱을 종료하시겠습니까?</string>
 </resources>
