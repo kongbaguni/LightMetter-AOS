@@ -118,7 +118,7 @@ fun BodyListScreen(
                 modifier = Modifier.padding(16.dp)
             )
             IconButton(onClick = onAddBody, modifier = Modifier.padding(end = 16.dp)) {
-                Icon(Icons.Default.Add, contentDescription = "Add Body")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_body))
             }
         }
 
@@ -134,7 +134,7 @@ fun BodyListScreen(
                     onClick = {
                         scope.launch { dataStore.saveSelectedBrand(null) }
                     },
-                    label = { Text("All") }
+                    label = { Text(stringResource(R.string.filter_all)) }
                 )
             }
             items(brands) { brand ->
@@ -155,26 +155,34 @@ fun BodyListScreen(
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
         )
 
-        LazyColumn(
-            modifier = Modifier.padding(top = 8.dp)
-        ) {
-            items(filteredBodies) { item ->
-                SwitchListColumnItem(
-                    brand = item.brand,
-                    name = item.name,
-                    isSelected = item == bodyUiState.selected,
-                    isCustom = item.id >= 10000,
-                    onClick = {
-                        scope.launch {
-                            dataStore.saveBody(item)
+        if (bodyUiState.bodies.isEmpty()) {
+            Text(
+                stringResource(R.string.loading_body_list),
+                modifier = Modifier.padding(16.dp),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                items(filteredBodies) { item ->
+                    SwitchListColumnItem(
+                        brand = item.brand,
+                        name = item.name,
+                        isSelected = item == bodyUiState.selected,
+                        isCustom = item.id >= 10000,
+                        onClick = {
+                            scope.launch {
+                                dataStore.saveBody(item)
+                            }
+                        },
+                        onEdit = { onEditBody(item) },
+                        onDelete = {
+                            itemToDeleteId = item.id
+                            showDeleteConfirmDialog = true
                         }
-                    },
-                    onEdit = { onEditBody(item) },
-                    onDelete = {
-                        itemToDeleteId = item.id
-                        showDeleteConfirmDialog = true
-                    }
-                )
+                    )
+                }
             }
         }
     }

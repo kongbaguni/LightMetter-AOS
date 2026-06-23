@@ -6,4 +6,19 @@
     <string name="delete_confirm_message">Are you sure you want to delete this item?</string>
     <string name="confirm">Confirm</string>
     <string name="cancel">Cancel</string>
+    <string name="add_body">Add Body</string>
+    <string name="add_lens">Add Lens</string>
+    <string name="filter_all">All</string>
+    <string name="loading_lens_list">loading lens list...</string>
+    <string name="loading_body_list">loading body list...</string>
+    <string name="add_custom_body">Add Custom Body</string>
+    <string name="edit_custom_body">Edit Custom Body</string>
+    <string name="add_custom_lens">Add Custom Lens</string>
+    <string name="edit_custom_lens">Edit Custom Lens</string>
+    <string name="brand">Brand</string>
+    <string name="model_name">Model Name</string>
+    <string name="shutter_speeds_label">Shutter Speeds (comma separated)</string>
+    <string name="apertures_label">Apertures (comma separated)</string>
+    <string name="save">Save</string>
+    <string name="back">Back</string>
 </resources>

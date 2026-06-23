@@ -6,4 +6,19 @@
     <string name="delete_confirm_message">정말 삭제하시겠습니까?</string>
     <string name="confirm">확인</string>
     <string name="cancel">취소</string>
+    <string name="add_body">바디 추가</string>
+    <string name="add_lens">렌즈 추가</string>
+    <string name="filter_all">전체</string>
+    <string name="loading_lens_list">렌즈 목록 로딩 중&#8230;</string>
+    <string name="loading_body_list">바디 목록 로딩 중&#8230;</string>
+    <string name="add_custom_body">커스텀 바디 추가</string>
+    <string name="edit_custom_body">커스텀 바디 편집</string>
+    <string name="add_custom_lens">커스텀 렌즈 추가</string>
+    <string name="edit_custom_lens">커스텀 렌즈 편집</string>
+    <string name="brand">브랜드</string>
+    <string name="model_name">모델명</string>
+    <string name="shutter_speeds_label">셔터 스피드 (쉼표로 구분)</string>
+    <string name="apertures_label">조리개값 (쉼표로 구분)</string>
+    <string name="save">저장</string>
+    <string name="back">뒤로</string>
 </resources>

@@ -25,8 +25,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import net.kongbaguni.lightmetter.R
 import net.kongbaguni.lightmetter.model.LensModel
 import net.kongbaguni.lightmetter.utill.DataStore
 
@@ -52,10 +54,10 @@ fun CustomLensEditScreen(
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
             }
             Text(
-                text = if (lensToEdit == null) "Add Custom Lens" else "Edit Custom Lens",
+                text = if (lensToEdit == null) stringResource(R.string.add_custom_lens) else stringResource(R.string.edit_custom_lens),
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(start = 8.dp)
             )
@@ -66,7 +68,7 @@ fun CustomLensEditScreen(
         OutlinedTextField(
             value = brand,
             onValueChange = { brand = it },
-            label = { Text("Brand") },
+            label = { Text(stringResource(R.string.brand)) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -75,7 +77,7 @@ fun CustomLensEditScreen(
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("Model Name") },
+            label = { Text(stringResource(R.string.model_name)) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -84,7 +86,7 @@ fun CustomLensEditScreen(
         OutlinedTextField(
             value = aperturesText,
             onValueChange = { aperturesText = it },
-            label = { Text("Apertures (comma separated)") },
+            label = { Text(stringResource(R.string.apertures_label)) },
             placeholder = { Text("1.4, 2, 2.8, 4, 5.6") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -107,7 +109,7 @@ fun CustomLensEditScreen(
             modifier = Modifier.fillMaxWidth(),
             enabled = brand.isNotBlank() && name.isNotBlank() && aperturesText.isNotBlank()
         ) {
-            Text("Save")
+            Text(stringResource(R.string.save))
         }
     }
 }

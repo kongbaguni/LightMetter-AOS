@@ -32,7 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
-import net.kongbaguni.lightmetter.R.string.lens_list
+import net.kongbaguni.lightmetter.R
 import net.kongbaguni.lightmetter.composable.component.SwitchListColumnItem
 import net.kongbaguni.lightmetter.model.LensUiState
 
@@ -63,8 +63,8 @@ fun LensListScreen(
     if (showDeleteConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = false },
-            title = { Text(stringResource(net.kongbaguni.lightmetter.R.string.delete_confirm_title)) },
-            text = { Text(stringResource(net.kongbaguni.lightmetter.R.string.delete_confirm_message)) },
+            title = { Text(stringResource(R.string.delete_confirm_title)) },
+            text = { Text(stringResource(R.string.delete_confirm_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -76,12 +76,12 @@ fun LensListScreen(
                         showDeleteConfirmDialog = false
                     }
                 ) {
-                    Text(stringResource(net.kongbaguni.lightmetter.R.string.confirm))
+                    Text(stringResource(R.string.confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmDialog = false }) {
-                    Text(stringResource(net.kongbaguni.lightmetter.R.string.cancel))
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -112,14 +112,14 @@ fun LensListScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = stringResource(lens_list),
+                text = stringResource(R.string.lens_list),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(16.dp)
             )
             IconButton(onClick = onAddLens, modifier = Modifier.padding(end = 16.dp)) {
-                Icon(Icons.Default.Add, contentDescription = "Add Lens")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_lens))
             }
         }
 
@@ -135,7 +135,7 @@ fun LensListScreen(
                     onClick = { 
                         scope.launch { dataStore.saveSelectedBrand(null) }
                     },
-                    label = { Text("All") }
+                    label = { Text(stringResource(R.string.filter_all)) }
                 )
             }
             items(brands) { brand ->
@@ -158,7 +158,7 @@ fun LensListScreen(
 
         if (lensUiState.lensList.isEmpty()) {
             Text(
-                "loading lens list...",
+                stringResource(R.string.loading_lens_list),
                 modifier = Modifier.padding(16.dp),
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
             )

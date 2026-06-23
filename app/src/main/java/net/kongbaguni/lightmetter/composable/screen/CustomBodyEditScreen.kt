@@ -25,8 +25,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import net.kongbaguni.lightmetter.R
 import net.kongbaguni.lightmetter.model.BodyModel
 import net.kongbaguni.lightmetter.utill.DataStore
 
@@ -52,10 +54,10 @@ fun CustomBodyEditScreen(
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
             }
             Text(
-                text = if (bodyToEdit == null) "Add Custom Body" else "Edit Custom Body",
+                text = if (bodyToEdit == null) stringResource(R.string.add_custom_body) else stringResource(R.string.edit_custom_body),
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(start = 8.dp)
             )
@@ -66,7 +68,7 @@ fun CustomBodyEditScreen(
         OutlinedTextField(
             value = brand,
             onValueChange = { brand = it },
-            label = { Text("Brand") },
+            label = { Text(stringResource(R.string.brand)) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -75,7 +77,7 @@ fun CustomBodyEditScreen(
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("Model Name") },
+            label = { Text(stringResource(R.string.model_name)) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -84,7 +86,7 @@ fun CustomBodyEditScreen(
         OutlinedTextField(
             value = shutterSpeedsText,
             onValueChange = { shutterSpeedsText = it },
-            label = { Text("Shutter Speeds (comma separated)") },
+            label = { Text(stringResource(R.string.shutter_speeds_label)) },
             placeholder = { Text("1, 1/2, 1/125, 1/1000") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -106,7 +108,7 @@ fun CustomBodyEditScreen(
             modifier = Modifier.fillMaxWidth(),
             enabled = brand.isNotBlank() && name.isNotBlank() && shutterSpeedsText.isNotBlank()
         ) {
-            Text("Save")
+            Text(stringResource(R.string.save))
         }
     }
 }
