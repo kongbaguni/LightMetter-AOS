@@ -19,6 +19,7 @@ import net.kongbaguni.lightmetter.model.LightMetterRange
 
 import android.graphics.Rect
 import android.hardware.camera2.params.MeteringRectangle
+import android.view.Surface
 import net.kongbaguni.lightmetter.model.LightMetterModel
 
 class LightMetterCameraManager(
@@ -31,6 +32,7 @@ class LightMetterCameraManager(
     private var cameraDevice: CameraDevice? = null
     private var captureSession: CameraCaptureSession? = null
     private var imageReader: ImageReader? = null
+    private var previewSurface: Surface? = null
 
     private val backgroundThread = HandlerThread("LightMeterThread").apply { start() }
     private val backgroundHandler = Handler(backgroundThread.looper)
@@ -39,6 +41,7 @@ class LightMetterCameraManager(
     /** 사진 측광 */
     fun photometry(
         range: LightMetterRange = LightMetterRange.Default,
+        previewSurface: Surface? = null,
         onChangeEv: (LightMetterModel) -> Unit,
         onRequestCameraPermission: () -> Unit
     ) {
@@ -46,6 +49,9 @@ class LightMetterCameraManager(
         var shutter: Double? = null
         var aperture: Double? = null
         finished = false
+        handleCount = 0
+        this.previewSurface = previewSurface
+
         fun post() {
             if (iso != null && shutter != null && aperture != null) {
                 onChangeEv(LightMetterModel(iso!!, shutter!!, aperture!!))
@@ -95,7 +101,7 @@ class LightMetterCameraManager(
         val cameraId = findBackCameraId() ?: return
 
         imageReader = ImageReader.newInstance(
-            320, 240,
+            640, 480, // 좀 더 높은 해상도로 변경 (미리보기 용도 고려)
             ImageFormat.YUV_420_888,
             2
         )
@@ -135,12 +141,15 @@ class LightMetterCameraManager(
         range: LightMetterRange = LightMetterRange.Default
     ) {
         val reader = imageReader ?: return
-        val surface = reader.surface
+        val readerSurface = reader.surface
+        val surfaces = mutableListOf(readerSurface)
+        previewSurface?.let { surfaces.add(it) }
 
         val requestBuilder =
             device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
 
-                addTarget(surface)
+                addTarget(readerSurface)
+                previewSurface?.let { addTarget(it) }
 
                 // 🔑 핵심: 자동 노출
                 set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
@@ -211,7 +220,7 @@ class LightMetterCameraManager(
             }
 
         device.createCaptureSession(
-            listOf(surface),
+            surfaces,
             object : CameraCaptureSession.StateCallback() {
 
                 override fun onConfigured(session: CameraCaptureSession) {
@@ -244,12 +253,17 @@ class LightMetterCameraManager(
         )
     }
 
+    private var handleCount = 0
     private fun handleResult(
         result: TotalCaptureResult,
         onChangeISO: (Double) -> Unit,
         onChangeShutterSpeed: (Double) -> Unit,
         onChangeAperture: (Double) -> Unit,
     ) {
+        // 자동 노출(AE)이 안정화될 때까지 몇 프레임 기다림
+        handleCount++
+        if (handleCount < 10) return 
+
         result.get(CaptureResult.SENSOR_SENSITIVITY)?.let {
             onChangeISO(it.toDouble())
         }

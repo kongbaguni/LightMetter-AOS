@@ -1,6 +1,7 @@
 package net.kongbaguni.lightmetter.utill
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -52,7 +53,19 @@ class DataStore(context: Context) {
         private val ISO_VALUE = intPreferencesKey("iso_value")
         private val SELECTED_BRAND = stringPreferencesKey("selected_brand")
         private val FILTER_ID = intPreferencesKey("filter_id")
+        private val SHOW_PREVIEW = booleanPreferencesKey("show_preview")
     }
+
+    /** 미리보기 표시 여부 저장 */
+    suspend fun saveShowPreview(show: Boolean) {
+        dataStore.edit {
+            it[SHOW_PREVIEW] = show
+        }
+    }
+
+    /** 미리보기 표시 여부 */
+    val showPreview: Flow<Boolean> =
+        dataStore.data.map { it[SHOW_PREVIEW] ?: true }
 
     /** 브랜드 필터 저장 */
     suspend fun saveSelectedBrand(brand: String?) {
