@@ -134,7 +134,8 @@ class LightMetterCameraManager(
         onChangeAperture: (Double) -> Unit,
         range: LightMetterRange = LightMetterRange.Default
     ) {
-        val surface = imageReader!!.surface
+        val reader = imageReader ?: return
+        val surface = reader.surface
 
         val requestBuilder =
             device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
