@@ -56,7 +56,7 @@
     {
         "id" : 10,
         "brand" : "Leica",
-        "name" : "M3 (Old Style / European Dial)",
+        "name" : "M (Old Style / European Dial)",
         "shutterSpeeds" : ["1", "1/2", "1/5", "1/10", "1/25", "1/50", "1/100", "1/250", "1/500", "1/1000"]
     },
     {

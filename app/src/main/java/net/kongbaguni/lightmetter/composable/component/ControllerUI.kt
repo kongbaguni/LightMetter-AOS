@@ -187,8 +187,21 @@ fun ControllerUI(
             apertureList.indexOfFirst { it.value == savedAperture }.coerceAtLeast(0)
 
         val savedSpeed = dataStore.selectedShutterSpeedValue.first()
-        initialSpeedIndex.value =
-            speedList.indexOfFirst { it.value == savedSpeed }.coerceAtLeast(0)
+        val speedIndex = speedList.indexOfFirst { it.value == savedSpeed }
+        initialSpeedIndex.value = if (speedIndex != -1) {
+            speedIndex
+        } else if (savedSpeed != "AUTO") {
+            // 저장된 값이 숫자인 경우 가장 가까운 값 찾기
+            val savedValue = parseShutterSpeed(savedSpeed)
+            speedList.mapIndexed { index, dialModel -> index to dialModel }
+                .filter { it.second.value != "AUTO" }
+                .minByOrNull {
+                    val value = parseShutterSpeed(it.second.value as String)
+                    kotlin.math.abs(value - savedValue)
+                }?.first ?: 0
+        } else {
+            0
+        }
 
         val savedIso = dataStore.selectedIsoValue.first()
         initialIsoList.value = isoList.indexOfFirst { it.value == savedIso }.coerceAtLeast(0)

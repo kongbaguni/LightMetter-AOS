@@ -91,16 +91,16 @@ class DataStore(context: Context) {
     }
 
     /** 선택된 Aperture value */
-    val selectedApertureValue: Flow<Double?> =
-        dataStore.data.map { it[APERTURE_VALUE] }
+    val selectedApertureValue: Flow<Double> =
+        dataStore.data.map { it[APERTURE_VALUE] ?: 5.6 }
 
     /** 선택된 Shutter Speed value */
-    val selectedShutterSpeedValue: Flow<String?> =
-        dataStore.data.map { it[SHUTTER_SPEED_VALUE] }
+    val selectedShutterSpeedValue: Flow<String> =
+        dataStore.data.map { it[SHUTTER_SPEED_VALUE] ?: "1/125" }
 
     /** 선택된 ISO value */
-    val selectedIsoValue: Flow<Int?> =
-        dataStore.data.map { it[ISO_VALUE] }
+    val selectedIsoValue: Flow<Int> =
+        dataStore.data.map { it[ISO_VALUE] ?: 200 }
 
     /** Body 저장 */
     suspend fun saveBody(body: BodyModel) {
@@ -131,14 +131,20 @@ class DataStore(context: Context) {
     val selectedBody: Flow<BodyModel> =
         combine(dataStore.data, repository.getAllBodies()) { prefs, bodyList ->
             val id = prefs[BODY_ID]
-            bodyList.firstOrNull { it.id == id } ?: bodyList.firstOrNull() ?: BodyModel(0, "", "", emptyList())
+            bodyList.firstOrNull { it.id == id } 
+                ?: bodyList.firstOrNull { it.id == 10 } 
+                ?: bodyList.firstOrNull() 
+                ?: BodyModel(0, "", "", emptyList())
         }
 
     /** 선택된 Lens */
     val selectedLens: Flow<LensModel> =
         combine(dataStore.data, repository.getAllLenses()) { prefs, lensList ->
             val id = prefs[LENS_ID]
-            lensList.firstOrNull { it.id == id } ?: lensList.firstOrNull() ?: LensModel(0, "", "", emptyList())
+            lensList.firstOrNull { it.id == id } 
+                ?: lensList.firstOrNull { it.id == 16 } 
+                ?: lensList.firstOrNull() 
+                ?: LensModel(0, "", "", emptyList())
         }
 
     /** 선택된 Filter */
@@ -151,7 +157,9 @@ class DataStore(context: Context) {
     val bodyUiState: Flow<BodyUiState> =
         combine(dataStore.data, repository.getAllBodies()) { prefs, bodyList ->
             val id = prefs[BODY_ID]
-            val selected = bodyList.find { it.id == id } ?: bodyList.firstOrNull()
+            val selected = bodyList.find { it.id == id } 
+                ?: bodyList.find { it.id == 10 } 
+                ?: bodyList.firstOrNull()
 
             BodyUiState(
                 bodies = bodyList,
@@ -162,7 +170,9 @@ class DataStore(context: Context) {
     val lensUiState: Flow<LensUiState> =
         combine(dataStore.data, repository.getAllLenses()) { prefs, lensList ->
             val id = prefs[LENS_ID]
-            val selected = lensList.find { it.id == id } ?: lensList.firstOrNull()
+            val selected = lensList.find { it.id == id } 
+                ?: lensList.find { it.id == 16 } 
+                ?: lensList.firstOrNull()
 
             LensUiState(
                 lensList = lensList,
