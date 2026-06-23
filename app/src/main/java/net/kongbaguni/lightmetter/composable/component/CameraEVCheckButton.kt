@@ -11,11 +11,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.Canvas
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
@@ -37,11 +42,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import net.kongbaguni.lightmetter.R
 import net.kongbaguni.lightmetter.model.FilterModel
 import net.kongbaguni.lightmetter.model.LightMetterModel
 import net.kongbaguni.lightmetter.model.LightMetterRange
@@ -51,6 +58,7 @@ import net.kongbaguni.lightmetter.utill.LightMetterCameraManager
 @Composable
 fun CameraEVCheckButton(
     measuredEv: Double?,
+    calculatedEv: Double?,
     meteringMode: LightMetterRange,
     onMeteringModeChange: (LightMetterRange) -> Unit,
     onEvMeasured: (LightMetterModel) -> Unit,
@@ -60,6 +68,7 @@ fun CameraEVCheckButton(
     val isPreview = LocalInspectionMode.current
     var showMeteringSelector by remember { mutableStateOf(false) }
     var showFilterSelector by remember { mutableStateOf(false) }
+    var isMeasuring by remember { mutableStateOf(false) }
 
     val dataStore = remember { DataStore(context) }
     val scope = rememberCoroutineScope()
@@ -110,13 +119,13 @@ fun CameraEVCheckButton(
                     .padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                MeteringModeItem("AVERAGE", meteringMode == LightMetterRange.Default) {
+                MeteringModeItem(LightMetterRange.Default, meteringMode == LightMetterRange.Default) {
                     onMeteringModeChange(LightMetterRange.Default)
                 }
-                MeteringModeItem("SPOT", meteringMode == LightMetterRange.Spot) {
+                MeteringModeItem(LightMetterRange.Spot, meteringMode == LightMetterRange.Spot) {
                     onMeteringModeChange(LightMetterRange.Spot)
                 }
-                MeteringModeItem("CENTER", meteringMode == LightMetterRange.Center) {
+                MeteringModeItem(LightMetterRange.Center, meteringMode == LightMetterRange.Center) {
                     onMeteringModeChange(LightMetterRange.Center)
                 }
             }
@@ -176,13 +185,20 @@ fun CameraEVCheckButton(
             Button(
                 onClick = {
                     if (isPreview) return@Button
+                    isMeasuring = true
                     lightMetterCameraManager?.photometry(
                         range = meteringMode,
-                        onChangeEv = { value -> onEvMeasured(value) },
-                        onRequestCameraPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) }
+                        onChangeEv = { value ->
+                            onEvMeasured(value)
+                            isMeasuring = false
+                        },
+                        onRequestCameraPermission = {
+                            permissionLauncher.launch(Manifest.permission.CAMERA)
+                            isMeasuring = false
+                        }
                     )
                 },
-                modifier = Modifier.size(80.dp),
+                modifier = Modifier.size(100.dp),
                 shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -191,11 +207,13 @@ fun CameraEVCheckButton(
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("측광", fontWeight = FontWeight.Bold)
-                    CameraMonitorIndicator(
-                        modifier = Modifier.size(20.dp),
-                        context = context
+                    EVIndecator(
+                        measuredEv = measuredEv,
+                        calculatedEv = calculatedEv,
+                        isMeasuring = isMeasuring
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("측광", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
             }
 
@@ -210,10 +228,9 @@ fun CameraEVCheckButton(
                         CircleShape
                     )
             ) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Metering Mode",
-                    tint = if (showMeteringSelector) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                MeteringModeIcon(
+                    mode = meteringMode,
+                    color = if (showMeteringSelector) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -222,23 +239,83 @@ fun CameraEVCheckButton(
 }
 
 @Composable
+fun MeteringModeIcon(
+    mode: LightMetterRange,
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Canvas(modifier = modifier.size(24.dp)) {
+        val width = size.width
+        val height = size.height
+        val strokeWidth = 1.5.dp.toPx()
+
+        // Outer frame
+        drawRect(
+            color = color,
+            style = Stroke(width = strokeWidth),
+            size = size
+        )
+
+        when (mode) {
+            LightMetterRange.Spot -> {
+                drawCircle(
+                    color = color,
+                    radius = 2.dp.toPx(),
+                    center = center
+                )
+            }
+            LightMetterRange.Center -> {
+                drawCircle(
+                    color = color,
+                    radius = 5.dp.toPx(),
+                    center = center,
+                    style = Stroke(width = strokeWidth)
+                )
+            }
+            LightMetterRange.Default -> { // Average / Matrix
+                val padding = 4.dp.toPx()
+                drawLine(color, Offset(width / 3, padding), Offset(width / 3, height - padding), strokeWidth)
+                drawLine(color, Offset(2 * width / 3, padding), Offset(2 * width / 3, height - padding), strokeWidth)
+                drawLine(color, Offset(padding, height / 2), Offset(width - padding, height / 2), strokeWidth)
+            }
+        }
+    }
+}
+
+@Composable
 fun MeteringModeItem(
-    label: String,
+    mode: LightMetterRange,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val label = when (mode) {
+        LightMetterRange.Default -> stringResource(R.string.metering_average)
+        LightMetterRange.Spot -> stringResource(R.string.metering_spot)
+        LightMetterRange.Center -> stringResource(R.string.metering_center)
+    }
+
     Surface(
         onClick = onClick,
         color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+        ) {
+            MeteringModeIcon(
+                mode = mode,
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.size(4.dp))
+            Text(
+                text = label,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
+        }
     }
 }
 
@@ -247,6 +324,7 @@ fun MeteringModeItem(
 fun CarmeraEvCheckButtonPreview() {
     CameraEVCheckButton(
         measuredEv = 12.5,
+        calculatedEv = 12.0,
         meteringMode = LightMetterRange.Default,
         onMeteringModeChange = {},
         onEvMeasured = {}

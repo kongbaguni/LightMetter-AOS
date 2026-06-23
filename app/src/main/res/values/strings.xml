@@ -21,4 +21,7 @@
     <string name="apertures_label">Apertures (comma separated)</string>
     <string name="save">Save</string>
     <string name="back">Back</string>
+    <string name="metering_average">Average</string>
+    <string name="metering_spot">Spot</string>
+    <string name="metering_center">Center</string>
 </resources>

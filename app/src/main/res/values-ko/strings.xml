@@ -21,4 +21,7 @@
     <string name="apertures_label">조리개값 (쉼표로 구분)</string>
     <string name="save">저장</string>
     <string name="back">뒤로</string>
+    <string name="metering_average">평균</string>
+    <string name="metering_spot">스팟</string>
+    <string name="metering_center">중앙</string>
 </resources>

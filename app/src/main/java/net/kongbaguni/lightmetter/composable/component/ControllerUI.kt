@@ -59,6 +59,7 @@ import kotlin.math.roundToInt
 @Composable
 fun ControllerUI(
     measuredEv: Double? = null,
+    onCalculatedEvChange: (Double?) -> Unit = {},
     onLensClick: () -> Unit = {},
     onBodyClick: () -> Unit = {}
 ) {
@@ -153,6 +154,10 @@ fun ControllerUI(
                 null
             }
         }
+    }
+
+    LaunchedEffect(calculatedEv.value) {
+        onCalculatedEvChange(calculatedEv.value)
     }
 
     LaunchedEffect(Unit) {
