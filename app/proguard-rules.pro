@@ -1,21 +1,25 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Project specific ProGuard rules
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# [GSON]
+# Prevent GSON from obfuscating model classes to ensure JSON mapping works
+-keep class net.kongbaguni.lightmetter.model.** { *; }
+-keepattributes Signature
+-keepattributes *Annotation*
+-dontwarn sun.misc.**
+-keep class com.google.gson.** { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# [Room]
+# Room often needs these to prevent issues with generated code
+-keepclassmembers class * extends androidx.room.RoomDatabase {
+    <init>(...);
+}
+-keep class androidx.room.introspection.DatabaseVerificationHelper { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# [General]
+# Keep line numbers for better stack traces in Crashlytics
+-keepattributes SourceFile,LineNumberTable
+
+# [Compose]
+# Usually handled by the Compose compiler, but keeping common rules
+-keep class androidx.compose.runtime.Recomposer { *; }
+-keep class androidx.compose.ui.platform.AndroidComposeView { *; }
