@@ -27,17 +27,18 @@ fun EVIndecator(
         val diff = if (measuredEv != null && calculatedEv != null) measuredEv - calculatedEv else null
         val activeColor = Color.Red
         val inactiveColor = Color.White.copy(alpha = 0.2f)
+        val threshold = 0.5
 
         // 노출 부족: 오른쪽 방향 세모 (더 밝게 조절 필요)
-        val leftActive = isMeasuring || (diff != null && diff < -0.3)
+        val leftActive = isMeasuring || (diff != null && diff < -threshold)
         TriangleSymbol(direction = TriangleDirection.Right, color = if (leftActive) activeColor else inactiveColor)
 
         // 정노출: 동그라미
-        val centerActive = isMeasuring || (diff != null && diff >= -0.3 && diff <= 0.3)
+        val centerActive = isMeasuring || (diff != null && diff >= -threshold && diff <= threshold)
         CircleSymbol(color = if (centerActive) activeColor else inactiveColor)
 
         // 노출 과다: 왼쪽 방향 세모 (더 어둡게 조절 필요)
-        val rightActive = isMeasuring || (diff != null && diff > 0.3)
+        val rightActive = isMeasuring || (diff != null && diff > threshold)
         TriangleSymbol(direction = TriangleDirection.Left, color = if (rightActive) activeColor else inactiveColor)
     }
 }
