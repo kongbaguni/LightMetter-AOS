@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material3.*
@@ -130,7 +132,16 @@ fun SettingsScreen(
                 Column {
                     SettingsItem(title = "App Version", value = "1.0.0")
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
-                    SettingsItem(title = "Developer", value = "Kongbaguni")
+                    SettingsItem(
+                        title = "Developer",
+                        value = "kongbaguni@gmail.com",
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                data = Uri.parse("mailto:kongbaguni@gmail.com")
+                            }
+                            context.startActivity(intent)
+                        }
+                    )
                 }
             }
         }
@@ -138,10 +149,15 @@ fun SettingsScreen(
 }
 
 @Composable
-fun SettingsItem(title: String, value: String) {
+fun SettingsItem(
+    title: String,
+    value: String,
+    onClick: (() -> Unit)? = null
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(enabled = onClick != null) { onClick?.invoke() }
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -150,7 +166,7 @@ fun SettingsItem(title: String, value: String) {
         Text(
             text = value,
             fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
