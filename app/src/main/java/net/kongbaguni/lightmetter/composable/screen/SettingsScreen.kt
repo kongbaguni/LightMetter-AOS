@@ -9,7 +9,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material3.*
@@ -35,7 +37,22 @@ fun SettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val isAdFree by dataStore.isAdFree.collectAsState(initial = false)
-    
+
+    // 앱 버전 가져오기
+    val versionName = remember {
+        try {
+            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(context.packageName, 0)
+            }
+            packageInfo.versionName ?: "Unknown"
+        } catch (e: Exception) {
+            "Unknown"
+        }
+    }
+
     val billingManager = remember { BillingManager(context, dataStore) }
 
     Scaffold(
@@ -130,7 +147,7 @@ fun SettingsScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column {
-                    SettingsItem(title = "App Version", value = "1.0.0")
+                    SettingsItem(title = "App Version", value = versionName)
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
                     SettingsItem(
                         title = "Developer",
