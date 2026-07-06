@@ -224,30 +224,37 @@ class LightMetterCameraManager(
             object : CameraCaptureSession.StateCallback() {
 
                 override fun onConfigured(session: CameraCaptureSession) {
+                    if (cameraDevice == null) return
                     captureSession = session
 
-                    session.setRepeatingRequest(
-                        requestBuilder.build(),
-                        object : CameraCaptureSession.CaptureCallback() {
+                    try {
+                        session.setRepeatingRequest(
+                            requestBuilder.build(),
+                            object : CameraCaptureSession.CaptureCallback() {
 
-                            override fun onCaptureCompleted(
-                                session: CameraCaptureSession,
-                                request: CaptureRequest,
-                                result: TotalCaptureResult
-                            ) {
-                                handleResult(
-                                    result,
-                                    onChangeISO,
-                                    onChangeShutterSpeed,
-                                    onChangeAperture
-                                )
-                            }
-                        },
-                        backgroundHandler
-                    )
+                                override fun onCaptureCompleted(
+                                    session: CameraCaptureSession,
+                                    request: CaptureRequest,
+                                    result: TotalCaptureResult
+                                ) {
+                                    handleResult(
+                                        result,
+                                        onChangeISO,
+                                        onChangeShutterSpeed,
+                                        onChangeAperture
+                                    )
+                                }
+                            },
+                            backgroundHandler
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
 
-                override fun onConfigureFailed(session: CameraCaptureSession) {}
+                override fun onConfigureFailed(session: CameraCaptureSession) {
+                    captureSession = null
+                }
             },
             backgroundHandler
         )
