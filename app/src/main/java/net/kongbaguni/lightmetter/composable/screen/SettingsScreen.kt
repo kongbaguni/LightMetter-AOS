@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
@@ -32,11 +33,15 @@ import net.kongbaguni.lightmetter.utill.DataStore
 @Composable
 fun SettingsScreen(
     dataStore: DataStore,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToBodyList: () -> Unit,
+    onNavigateToLensList: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val isAdFree by dataStore.isAdFree.collectAsState(initial = false)
+    val selectedBody by dataStore.selectedBody.collectAsState(initial = null)
+    val selectedLens by dataStore.selectedLens.collectAsState(initial = null)
 
     // 앱 버전 가져오기
     val versionName = remember {
@@ -131,6 +136,36 @@ fun SettingsScreen(
                 }
             }
 
+            // Equipment Section
+            Text(
+                text = "Equipment",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column {
+                    SettingsItem(
+                        title = "Body",
+                        value = selectedBody?.let { "${it.brand} ${it.name}" } ?: "Select Body",
+                        onClick = onNavigateToBodyList
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
+                    SettingsItem(
+                        title = "Lens",
+                        value = selectedLens?.let { "${it.brand} ${it.name}" } ?: "Select Lens",
+                        onClick = onNavigateToLensList
+                    )
+                }
+            }
+
             // Information Section
             Text(
                 text = "Information",
@@ -186,4 +221,17 @@ fun SettingsItem(
             color = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SettingScreenPreview() {
+    val context = LocalContext.current
+    val dataStore = remember { DataStore(context) }
+    SettingsScreen(
+        dataStore = dataStore,
+        onBack = { },
+        onNavigateToBodyList = { },
+        onNavigateToLensList = { }
+    )
 }

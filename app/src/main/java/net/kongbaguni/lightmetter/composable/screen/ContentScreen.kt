@@ -118,7 +118,9 @@ fun ContentScreen(context: Context, modifier: Modifier) {
             )
             Page.SETTINGS -> SettingsScreen(
                 dataStore = dataStore,
-                onBack = { currentPage = Page.MAIN }
+                onBack = { currentPage = Page.MAIN },
+                onNavigateToBodyList = { currentPage = Page.BODYLIST },
+                onNavigateToLensList = { currentPage = Page.LENSLIST }
             )
         }
     }
