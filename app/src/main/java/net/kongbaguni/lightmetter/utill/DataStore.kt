@@ -59,10 +59,23 @@ class DataStore(context: Context) {
         private val IS_SUBSCRIPTION_ACTIVE = booleanPreferencesKey("is_subscription_active")
     }
 
-    /** 광고 제거 만료 시간 저장 (일회성 구매용) */
-    suspend fun saveAdFreeUntil(timestamp: Long) {
+    /** 광고 제거 만료 시간 저장 (일회성 구매용 - 기존 기간이 남았으면 연장) */
+    suspend fun addAdFreeDays(days: Int) {
         dataStore.edit {
-            it[AD_FREE_UNTIL] = timestamp
+            val currentExpiry = it[AD_FREE_UNTIL] ?: 0L
+            val startTime = if (currentExpiry > System.currentTimeMillis()) currentExpiry else System.currentTimeMillis()
+            val addMillis = days.toLong() * 24 * 60 * 60 * 1000
+            it[AD_FREE_UNTIL] = startTime + addMillis
+        }
+    }
+
+    /** 복구용: 특정 타임스탬프로 만료일 강제 설정 (더 먼 미래일 때만) */
+    suspend fun restoreAdFreeUntil(timestamp: Long) {
+        dataStore.edit {
+            val currentExpiry = it[AD_FREE_UNTIL] ?: 0L
+            if (timestamp > currentExpiry) {
+                it[AD_FREE_UNTIL] = timestamp
+            }
         }
     }
 
@@ -72,6 +85,10 @@ class DataStore(context: Context) {
             it[IS_SUBSCRIPTION_ACTIVE] = active
         }
     }
+
+    /** 정기 구독 중인지 여부 */
+    val isSubscriptionActive: Flow<Boolean> =
+        dataStore.data.map { it[IS_SUBSCRIPTION_ACTIVE] ?: false }
 
     /** 광고 제거 여부 (정기 구독 중이거나 일회성 구매 만료 전인지 체크) */
     val isAdFree: Flow<Boolean> =

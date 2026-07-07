@@ -40,6 +40,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val isAdFree by dataStore.isAdFree.collectAsState(initial = false)
+    val isSubscriptionActive by dataStore.isSubscriptionActive.collectAsState(initial = false)
     val selectedBody by dataStore.selectedBody.collectAsState(initial = null)
     val selectedLens by dataStore.selectedLens.collectAsState(initial = null)
 
@@ -123,31 +124,51 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Button(
-                                onClick = {
-                                    (context as? Activity)?.let { activity ->
-                                        billingManager.buyCoffee(activity)
-                                    }
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Text("한번만 사주기 (30일)")
-                            }
+                            if (isSubscriptionActive) {
+                                // 구독 중인 경우: 관리 버튼 표시
+                                Button(
+                                    onClick = {
+                                        (context as? Activity)?.let { activity ->
+                                            billingManager.openSubscriptionManagement(activity)
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.secondary
+                                    )
+                                ) {
+                                    Text("정기 구독 관리하기")
+                                }
+                            } else {
+                                // 구독 중이 아닌 경우: 후원 버튼들 표시
+                                Button(
+                                    onClick = {
+                                        (context as? Activity)?.let { activity ->
+                                            billingManager.buyCoffee(activity)
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    val text = if (isAdFree) "일회성 후원 연장하기 (30일)" else "한번만 사주기 (30일)"
+                                    Text(text)
+                                }
 
-                            Button(
-                                onClick = {
-                                    (context as? Activity)?.let { activity ->
-                                        billingManager.subscribeCoffee(activity)
-                                    }
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.secondary
-                                )
-                            ) {
-                                Text("정기 후원하기 (매달)")
+                                Button(
+                                    onClick = {
+                                        (context as? Activity)?.let { activity ->
+                                            billingManager.subscribeCoffee(activity)
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.secondary
+                                    )
+                                ) {
+                                    Text("정기 후원하기 (매달)")
+                                }
                             }
                         }
 
