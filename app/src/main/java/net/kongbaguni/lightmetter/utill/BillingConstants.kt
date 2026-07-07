@@ -5,5 +5,5 @@ object BillingConstants {
     const val PRODUCT_ID_SUBSCRIPTION = "coffee_subscription"
 
     /** 일회성 구매 제품 ID (30일 소모성) */
-    const val PRODUCT_ID_ONE_TIME = "coffee_buy"
+    const val PRODUCT_ID_ONE_TIME = "coffee"
 }
