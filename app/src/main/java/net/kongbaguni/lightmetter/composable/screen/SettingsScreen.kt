@@ -52,9 +52,9 @@ fun SettingsScreen(
                 @Suppress("DEPRECATION")
                 context.packageManager.getPackageInfo(context.packageName, 0)
             }
-            packageInfo.versionName ?: "Unknown"
+            packageInfo.versionName ?: "알 수 없음"
         } catch (e: Exception) {
-            "Unknown"
+            "알 수 없음"
         }
     }
 
@@ -63,10 +63,10 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.Bold) },
+                title = { Text("설정", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
                     }
                 }
             )
@@ -80,65 +80,84 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Support Section
-            Text(
-                text = "Support",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+            if(!isAdFree) {
+                // Support Section
+                Text(
+                    text = "후원",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Coffee,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Monthly Subscription",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "정기적으로 개발자를 후원하고\n광고 제거 및 모든 기능을 즐기세요!",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                    
-                    Button(
-                        onClick = {
-                            if (!isAdFree) {
-                                (context as? Activity)?.let { activity ->
-                                    billingManager.subscribeCoffee(activity)
-                                }
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isAdFree
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(if (isAdFree) "구독 중입니다 (광고 제거됨)" else "정기 후원하기")
+                        Icon(
+                            imageVector = Icons.Default.Coffee,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "커피 한 잔 선물하기",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "개발자에게 커피 한 잔을 선물하고\n광고 없이 모든 기능을 즐기세요!",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    (context as? Activity)?.let { activity ->
+                                        billingManager.buyCoffee(activity)
+                                    }
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text("한번만 사주기 (30일)")
+                            }
+
+                            Button(
+                                onClick = {
+                                    (context as? Activity)?.let { activity ->
+                                        billingManager.subscribeCoffee(activity)
+                                    }
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.secondary
+                                )
+                            ) {
+                                Text("정기 후원하기 (매달)")
+                            }
+                        }
+
                     }
                 }
             }
 
             // Equipment Section
             Text(
-                text = "Equipment",
+                text = "내 장비",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -153,14 +172,14 @@ fun SettingsScreen(
             ) {
                 Column {
                     SettingsItem(
-                        title = "Body",
-                        value = selectedBody?.let { "${it.brand} ${it.name}" } ?: "Select Body",
+                        title = "바디",
+                        value = selectedBody?.let { "${it.brand} ${it.name}" } ?: "바디 선택",
                         onClick = onNavigateToBodyList
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
                     SettingsItem(
-                        title = "Lens",
-                        value = selectedLens?.let { "${it.brand} ${it.name}" } ?: "Select Lens",
+                        title = "렌즈",
+                        value = selectedLens?.let { "${it.brand} ${it.name}" } ?: "렌즈 선택",
                         onClick = onNavigateToLensList
                     )
                 }
@@ -168,7 +187,7 @@ fun SettingsScreen(
 
             // Information Section
             Text(
-                text = "Information",
+                text = "정보",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -182,10 +201,10 @@ fun SettingsScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column {
-                    SettingsItem(title = "App Version", value = versionName)
+                    SettingsItem(title = "앱 버전", value = versionName)
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
                     SettingsItem(
-                        title = "Developer",
+                        title = "개발자",
                         value = "kongbaguni@gmail.com",
                         onClick = {
                             val intent = Intent(Intent.ACTION_SENDTO).apply {

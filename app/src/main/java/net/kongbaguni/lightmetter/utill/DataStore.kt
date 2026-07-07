@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -54,19 +55,31 @@ class DataStore(context: Context) {
         private val SELECTED_BRAND = stringPreferencesKey("selected_brand")
         private val FILTER_ID = intPreferencesKey("filter_id")
         private val SHOW_PREVIEW = booleanPreferencesKey("show_preview")
-        private val IS_AD_FREE = booleanPreferencesKey("is_ad_free")
+        private val AD_FREE_UNTIL = longPreferencesKey("ad_free_until")
+        private val IS_SUBSCRIPTION_ACTIVE = booleanPreferencesKey("is_subscription_active")
     }
 
-    /** 광고 제거 여부 저장 */
-    suspend fun saveAdFree(isAdFree: Boolean) {
+    /** 광고 제거 만료 시간 저장 (일회성 구매용) */
+    suspend fun saveAdFreeUntil(timestamp: Long) {
         dataStore.edit {
-            it[IS_AD_FREE] = isAdFree
+            it[AD_FREE_UNTIL] = timestamp
         }
     }
 
-    /** 광고 제거 여부 */
+    /** 정기 구독 활성화 여부 저장 */
+    suspend fun saveSubscriptionActive(active: Boolean) {
+        dataStore.edit {
+            it[IS_SUBSCRIPTION_ACTIVE] = active
+        }
+    }
+
+    /** 광고 제거 여부 (정기 구독 중이거나 일회성 구매 만료 전인지 체크) */
     val isAdFree: Flow<Boolean> =
-        dataStore.data.map { it[IS_AD_FREE] ?: false }
+        dataStore.data.map { 
+            val expiry = it[AD_FREE_UNTIL] ?: 0L
+            val isSubActive = it[IS_SUBSCRIPTION_ACTIVE] ?: false
+            isSubActive || expiry > System.currentTimeMillis()
+        }
 
     /** 미리보기 표시 여부 저장 */
     suspend fun saveShowPreview(show: Boolean) {

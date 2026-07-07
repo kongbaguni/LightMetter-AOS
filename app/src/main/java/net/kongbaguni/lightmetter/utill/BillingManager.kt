@@ -31,19 +31,18 @@ class BillingManager(
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    // 연결 성공 시 기존 구매 내역 확인
                     checkPurchases()
                 }
             }
 
             override fun onBillingServiceDisconnected() {
-                // 연결이 끊어지면 재시도 로직 등을 넣을 수 있음
+                // 재연결 로직 생략
             }
         })
     }
 
-    /** 구독 결제 시작 */
-    fun subscribeCoffee(activity: Activity, productId: String = "coffee_subscription") {
+    /** 정기 구독 시작 */
+    fun subscribeCoffee(activity: Activity, productId: String = BillingConstants.PRODUCT_ID_SUBSCRIPTION) {
         val productList = listOf(
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(productId)
@@ -51,16 +50,12 @@ class BillingManager(
                 .build()
         )
 
-        val params = QueryProductDetailsParams.newBuilder()
-            .setProductList(productList)
-            .build()
+        val params = QueryProductDetailsParams.newBuilder().setProductList(productList).build()
 
         billingClient.queryProductDetailsAsync(params) { billingResult, queryProductDetailsResult ->
             val productDetailsList = queryProductDetailsResult.productDetailsList
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && productDetailsList.isNotEmpty()) {
                 val productDetails = productDetailsList[0]
-                
-                // 구독 상품은 offerToken이 필요합니다 (첫 번째 기본 요금제 선택)
                 val offerToken = productDetails.subscriptionOfferDetails?.firstOrNull()?.offerToken ?: ""
                 
                 val productDetailsParamsList = listOf(
@@ -79,39 +74,103 @@ class BillingManager(
         }
     }
 
-    /** 결제 완료 처리 */
+    /** 일회성 커피 구매 */
+    fun buyCoffee(activity: Activity, productId: String = BillingConstants.PRODUCT_ID_ONE_TIME) {
+        val productList = listOf(
+            QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(productId)
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build()
+        )
+
+        val params = QueryProductDetailsParams.newBuilder().setProductList(productList).build()
+
+        billingClient.queryProductDetailsAsync(params) { billingResult, queryProductDetailsResult ->
+            val productDetailsList = queryProductDetailsResult.productDetailsList
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && productDetailsList.isNotEmpty()) {
+                val productDetails = productDetailsList[0]
+                
+                val productDetailsParamsList = listOf(
+                    BillingFlowParams.ProductDetailsParams.newBuilder()
+                        .setProductDetails(productDetails)
+                        .build()
+                )
+
+                val flowParams = BillingFlowParams.newBuilder()
+                    .setProductDetailsParamsList(productDetailsParamsList)
+                    .build()
+
+                billingClient.launchBillingFlow(activity, flowParams)
+            }
+        }
+    }
+
     private fun handlePurchase(purchase: Purchase) {
         if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
-            if (!purchase.isAcknowledged) {
-                val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
+            if (purchase.products.contains(BillingConstants.PRODUCT_ID_ONE_TIME)) {
+                // 일회성 구매: 소모 처리 후 30일 연장
+                val consumeParams = ConsumeParams.newBuilder()
                     .setPurchaseToken(purchase.purchaseToken)
                     .build()
 
-                billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
+                billingClient.consumeAsync(consumeParams) { billingResult, _ ->
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                         scope.launch {
-                            dataStore.saveAdFree(true)
+                            val oneMonthMillis = 30L * 24 * 60 * 60 * 1000
+                            val expiryTime = System.currentTimeMillis() + oneMonthMillis
+                            dataStore.saveAdFreeUntil(expiryTime)
                         }
+                    }
+                }
+            } else if (purchase.products.contains(BillingConstants.PRODUCT_ID_SUBSCRIPTION)) {
+                // 정기 구독: 승인 처리 후 상태 저장
+                if (!purchase.isAcknowledged) {
+                    val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
+                        .setPurchaseToken(purchase.purchaseToken)
+                        .build()
+
+                    billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
+                        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                            scope.launch {
+                                dataStore.saveSubscriptionActive(true)
+                            }
+                        }
+                    }
+                } else {
+                    scope.launch {
+                        dataStore.saveSubscriptionActive(true)
                     }
                 }
             }
         }
     }
 
-    /** 기존 구독 내역 확인 */
     private fun checkPurchases() {
-        val params = QueryPurchasesParams.newBuilder()
+        // 1. 구독 확인
+        val subParams = QueryPurchasesParams.newBuilder()
             .setProductType(BillingClient.ProductType.SUBS)
             .build()
-
-        billingClient.queryPurchasesAsync(params) { billingResult, purchases ->
+        billingClient.queryPurchasesAsync(subParams) { billingResult, purchases ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                val hasActiveSubscription = purchases.any { 
+                val isSubActive = purchases.any { 
                     it.purchaseState == Purchase.PurchaseState.PURCHASED && 
-                    it.products.contains("coffee_subscription")
+                    it.products.contains(BillingConstants.PRODUCT_ID_SUBSCRIPTION)
                 }
-                scope.launch {
-                    dataStore.saveAdFree(hasActiveSubscription)
+                scope.launch { dataStore.saveSubscriptionActive(isSubActive) }
+            }
+        }
+
+        // 2. 일회성 구매 중 아직 소모되지 않은 것이 있는지 확인
+        val inAppParams = QueryPurchasesParams.newBuilder()
+            .setProductType(BillingClient.ProductType.INAPP)
+            .build()
+        billingClient.queryPurchasesAsync(inAppParams) { billingResult, purchases ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                purchases.forEach { purchase ->
+                    if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && 
+                        purchase.products.contains(BillingConstants.PRODUCT_ID_ONE_TIME)) {
+                        handlePurchase(purchase)
+                    }
                 }
             }
         }
