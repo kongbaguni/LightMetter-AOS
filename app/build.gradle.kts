@@ -52,6 +52,7 @@ android {
 
 dependencies {
     implementation(libs.play.services.ads)
+    implementation(libs.play.services.auth)
     implementation(libs.androidx.fragment)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -77,6 +78,8 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth)
 
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)

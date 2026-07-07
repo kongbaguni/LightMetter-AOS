@@ -59,6 +59,11 @@ class DataStore(context: Context) {
         private val IS_SUBSCRIPTION_ACTIVE = booleanPreferencesKey("is_subscription_active")
     }
 
+    /** 현재 광고 제거 만료 시간 가져오기 */
+    suspend fun getAdFreeUntil(): Long {
+        return dataStore.data.map { it[AD_FREE_UNTIL] ?: 0L }.first()
+    }
+
     /** 광고 제거 만료 시간 저장 (일회성 구매용 - 기존 기간이 남았으면 연장) */
     suspend fun addAdFreeDays(days: Int) {
         dataStore.edit {

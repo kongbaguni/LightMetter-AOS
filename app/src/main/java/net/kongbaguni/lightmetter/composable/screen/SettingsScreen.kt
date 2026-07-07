@@ -1,5 +1,7 @@
 package net.kongbaguni.lightmetter.composable.screen
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,6 +15,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -44,6 +47,18 @@ fun SettingsScreen(
     val selectedBody by dataStore.selectedBody.collectAsState(initial = null)
     val selectedLens by dataStore.selectedLens.collectAsState(initial = null)
 
+    val billingManager = remember { BillingManager(context, dataStore) }
+    val isUserLoggedIn by billingManager.isUserLoggedIn.collectAsState()
+    val userEmail by billingManager.userEmail.collectAsState()
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            billingManager.handleGoogleSignInResult(result.data)
+        }
+    }
+
     // 앱 버전 가져오기
     val versionName = remember {
         try {
@@ -58,8 +73,6 @@ fun SettingsScreen(
             "알 수 없음"
         }
     }
-
-    val billingManager = remember { BillingManager(context, dataStore) }
 
     Scaffold(
         topBar = {
@@ -81,6 +94,62 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Account Section
+            Text(
+                text = "계정",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    if (isUserLoggedIn) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null, tint = Color.Green)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text("구글 계정 연결됨", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                                    userEmail?.let {
+                                        Text(it, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                            }
+                            TextButton(onClick = { billingManager.signOut() }) {
+                                Text("로그아웃", color = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    } else {
+                        Text(
+                            "구매 내역을 안전하게 보관하려면 구글 계정을 연결하세요.",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = {
+                                googleSignInLauncher.launch(billingManager.getGoogleSignInIntent(context))
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("구글 계정 연결하기")
+                        }
+                    }
+                }
+            }
+
             if(!isAdFree) {
                 // Support Section
                 Text(
@@ -89,6 +158,7 @@ fun SettingsScreen(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
+// ... 나머지 코드 동일 ...
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),

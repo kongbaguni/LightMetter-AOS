@@ -10,13 +10,15 @@ junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
-composeBom = "2026.06.00"
+composeBom = "2026.06.01"
 coil = "2.7.0"
 playServicesAds = "25.4.0"
+playServicesAuth = "21.3.0"
 room = "2.8.4"
 fragment = "1.8.9"
 ksp = "2.3.9"
 billing = "9.1.0"
+firebaseAuthCommon = "9.8.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -24,6 +26,8 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+firebase-auth = { module = "com.google.firebase:firebase-auth" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -46,6 +50,7 @@ androidx-room-runtime = { group = "androidx.room", name = "room-runtime", versio
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
+play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 androidx-fragment = { group = "androidx.fragment", name = "fragment", version.ref = "fragment" }
 billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billing" }
 

@@ -5,8 +5,17 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.android.billingclient.api.*
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class BillingManager(
@@ -14,6 +23,15 @@ class BillingManager(
     private val dataStore: DataStore
 ) {
     private val scope = CoroutineScope(Dispatchers.Main)
+    private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+
+    private val _isUserLoggedIn = MutableStateFlow(false)
+    val isUserLoggedIn: StateFlow<Boolean> = _isUserLoggedIn
+
+    private val _userEmail = MutableStateFlow<String?>(null)
+    val userEmail: StateFlow<String?> = _userEmail
+
     private var billingClient: BillingClient = BillingClient.newBuilder(context)
         .setListener { billingResult, purchases ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
@@ -27,6 +45,75 @@ class BillingManager(
 
     init {
         startConnection()
+        signInAnonymously()
+    }
+
+    private fun updateLoginState() {
+        val user = auth.currentUser
+        val loggedIn = user != null && !user.isAnonymous
+        _isUserLoggedIn.value = loggedIn
+        _userEmail.value = if (loggedIn) user?.email else null
+    }
+
+    /** 로그아웃 (다시 익명 계정으로 전환) */
+    fun signOut() {
+        auth.signOut()
+        signInAnonymously()
+    }
+
+    private fun signInAnonymously() {
+        if (auth.currentUser == null) {
+            auth.signInAnonymously().addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    syncWithFirestore()
+                    updateLoginState()
+                }
+            }
+        } else {
+            syncWithFirestore()
+            updateLoginState()
+        }
+    }
+
+    /** 구글 로그인 인텐트 생성 */
+    fun getGoogleSignInIntent(context: Context): Intent {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken("781605620834-tpof4a8ms7bkffphbtobnpd0j1b5pll9.apps.googleusercontent.com")
+            .requestEmail()
+            .build()
+
+        return GoogleSignIn.getClient(context, gso).signInIntent
+    }
+
+    /** 구글 로그인 결과 처리 및 계정 연동 */
+    fun handleGoogleSignInResult(data: Intent?) {
+        val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+        try {
+            val account = task.getResult(com.google.android.gms.common.api.ApiException::class.java)!!
+            val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+
+            val currentUser = auth.currentUser
+            if (currentUser != null) {
+                // 기존 익명 계정과 구글 계정 연동 (구매 내역 보존)
+                currentUser.linkWithCredential(credential)
+                    .addOnCompleteListener { linkTask ->
+                        if (linkTask.isSuccessful) {
+                            syncWithFirestore()
+                            updateLoginState()
+                        } else {
+                            // 연동 실패 시 (이미 다른 계정이 있을 경우 등) 직접 로그인
+                            auth.signInWithCredential(credential).addOnCompleteListener { signInTask ->
+                                if (signInTask.isSuccessful) {
+                                    syncWithFirestore()
+                                    updateLoginState()
+                                }
+                            }
+                        }
+                    }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun startConnection() {
@@ -34,15 +121,41 @@ class BillingManager(
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     checkPurchases()
-                    restorePurchases() // 재설치 시 복구 로직 추가
                 }
             }
-
             override fun onBillingServiceDisconnected() {}
         })
     }
 
-    /** 구독 관리 페이지로 이동 */
+    private fun syncWithFirestore() {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    val expiryTime = document.getLong("ad_free_until") ?: 0L
+                    val isSubActive = document.getBoolean("is_subscription_active") ?: false
+                    
+                    scope.launch {
+                        if (expiryTime > System.currentTimeMillis()) {
+                            dataStore.restoreAdFreeUntil(expiryTime)
+                        }
+                        dataStore.saveSubscriptionActive(isSubActive)
+                    }
+                }
+            }
+    }
+
+    private fun uploadPurchaseToFirestore(expiryTime: Long? = null, isSubActive: Boolean? = null) {
+        val uid = auth.currentUser?.uid ?: return
+        val updates = mutableMapOf<String, Any>()
+        expiryTime?.let { updates["ad_free_until"] = it }
+        isSubActive?.let { updates["is_subscription_active"] = it }
+
+        if (updates.isNotEmpty()) {
+            db.collection("users").document(uid).set(updates, SetOptions.merge())
+        }
+    }
+
     fun openSubscriptionManagement(activity: Activity) {
         val packageName = activity.packageName
         val url = "https://play.google.com/store/account/subscriptions?package=$packageName&sku=${BillingConstants.PRODUCT_ID_SUBSCRIPTION}"
@@ -52,7 +165,6 @@ class BillingManager(
         activity.startActivity(intent)
     }
 
-    /** 정기 구독 시작 */
     fun subscribeCoffee(activity: Activity, productId: String = BillingConstants.PRODUCT_ID_SUBSCRIPTION) {
         val productList = listOf(
             QueryProductDetailsParams.Product.newBuilder()
@@ -78,7 +190,6 @@ class BillingManager(
         }
     }
 
-    /** 일회성 커피 구매 */
     fun buyCoffee(activity: Activity, productId: String = BillingConstants.PRODUCT_ID_ONE_TIME) {
         val productList = listOf(
             QueryProductDetailsParams.Product.newBuilder()
@@ -107,7 +218,9 @@ class BillingManager(
                 billingClient.consumeAsync(consumeParams) { billingResult, _ ->
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                         scope.launch {
-                            dataStore.addAdFreeDays(30) // 30일 연장
+                            dataStore.addAdFreeDays(30)
+                            val newExpiry = dataStore.getAdFreeUntil()
+                            uploadPurchaseToFirestore(expiryTime = newExpiry)
                         }
                     }
                 }
@@ -117,17 +230,22 @@ class BillingManager(
                         .setPurchaseToken(purchase.purchaseToken).build()
                     billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
                         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                            scope.launch { dataStore.saveSubscriptionActive(true) }
+                            scope.launch {
+                                dataStore.saveSubscriptionActive(true)
+                                uploadPurchaseToFirestore(isSubActive = true)
+                            }
                         }
                     }
                 } else {
-                    scope.launch { dataStore.saveSubscriptionActive(true) }
+                    scope.launch {
+                        dataStore.saveSubscriptionActive(true)
+                        uploadPurchaseToFirestore(isSubActive = true)
+                    }
                 }
             }
         }
     }
 
-    /** 현재 유효한 구매 확인 */
     private fun checkPurchases() {
         val subParams = QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build()
         billingClient.queryPurchasesAsync(subParams) { billingResult, purchases ->
@@ -135,31 +253,9 @@ class BillingManager(
                 val isSubActive = purchases.any { 
                     it.purchaseState == Purchase.PurchaseState.PURCHASED && it.products.contains(BillingConstants.PRODUCT_ID_SUBSCRIPTION)
                 }
-                scope.launch { dataStore.saveSubscriptionActive(isSubActive) }
-            }
-        }
-    }
-
-    /** [중요] 재설치 시 이미 소모된 내역을 바탕으로 기간 복구 */
-    private fun restorePurchases() {
-        val params = QueryPurchaseHistoryParams.newBuilder()
-            .setProductType(BillingClient.ProductType.INAPP)
-            .build()
-
-        billingClient.queryPurchaseHistoryAsync(params) { billingResult, historyList ->
-            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && historyList != null) {
-                val lastCoffeePurchase = historyList.find { it.products.contains(BillingConstants.PRODUCT_ID_ONE_TIME) }
-                lastCoffeePurchase?.let { history ->
-                    val purchaseTime = history.purchaseTime
-                    val oneMonthMillis = 30L * 24 * 60 * 60 * 1000
-                    val expiryTime = purchaseTime + oneMonthMillis
-
-                    // 아직 30일이 지나지 않았다면 복구
-                    if (expiryTime > System.currentTimeMillis()) {
-                        scope.launch {
-                            dataStore.restoreAdFreeUntil(expiryTime)
-                        }
-                    }
+                scope.launch {
+                    dataStore.saveSubscriptionActive(isSubActive)
+                    uploadPurchaseToFirestore(isSubActive = isSubActive)
                 }
             }
         }
