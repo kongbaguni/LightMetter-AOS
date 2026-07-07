@@ -26,11 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
+import net.kongbaguni.lightmetter.R
 import net.kongbaguni.lightmetter.utill.BillingManager
 import net.kongbaguni.lightmetter.utill.DataStore
 
@@ -44,7 +46,6 @@ fun SettingsScreen(
     onNavigateToLensList: () -> Unit
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     
     fun isOnline(): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -69,7 +70,10 @@ fun SettingsScreen(
     }
 
     // 앱 버전 가져오기
-    val versionName = remember {
+    val unknownVersion = stringResource(R.string.settings_version_unknown)
+    val networkErrorMsg = stringResource(R.string.settings_network_error)
+    
+    val versionName = remember(unknownVersion) {
         try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
@@ -77,19 +81,19 @@ fun SettingsScreen(
                 @Suppress("DEPRECATION")
                 context.packageManager.getPackageInfo(context.packageName, 0)
             }
-            packageInfo.versionName ?: "알 수 없음"
+            packageInfo.versionName ?: unknownVersion
         } catch (e: Exception) {
-            "알 수 없음"
+            unknownVersion
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("설정", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.settings_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 }
             )
@@ -105,7 +109,7 @@ fun SettingsScreen(
         ) {
             // Account Section
             Text(
-                text = "계정",
+                text = stringResource(R.string.settings_account_section),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -129,19 +133,19 @@ fun SettingsScreen(
                                 Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null, tint = Color.Green)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
-                                    Text("구글 계정 연결됨", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.settings_google_connected), fontSize = 15.sp, fontWeight = FontWeight.Bold)
                                     userEmail?.let {
                                         Text(it, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
                             }
                             TextButton(onClick = { billingManager.signOut() }) {
-                                Text("로그아웃", color = MaterialTheme.colorScheme.error)
+                                Text(stringResource(R.string.settings_logout), color = MaterialTheme.colorScheme.error)
                             }
                         }
                     } else {
                         Text(
-                            "구매 내역을 안전하게 보관하려면 구글 계정을 연결하세요.",
+                            stringResource(R.string.settings_google_connect_msg),
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -151,13 +155,13 @@ fun SettingsScreen(
                                 if (isOnline()) {
                                     googleSignInLauncher.launch(billingManager.getGoogleSignInIntent(context))
                                 } else {
-                                    Toast.makeText(context, "인터넷 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, networkErrorMsg, Toast.LENGTH_SHORT).show()
                                 }
                             },
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("구글 계정 연결하기")
+                            Text(stringResource(R.string.settings_google_connect_btn))
                         }
                     }
                 }
@@ -166,12 +170,11 @@ fun SettingsScreen(
             if(!isAdFree) {
                 // Support Section
                 Text(
-                    text = "후원",
+                    text = stringResource(R.string.settings_support_section),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
-// ... 나머지 코드 동일 ...
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -192,16 +195,16 @@ fun SettingsScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "커피 한 잔 선물하기",
+                            text = stringResource(R.string.settings_coffee_title),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "개발자에게 커피 한 잔을 선물하고\n광고 없이 모든 기능을 즐기세요!",
+                            text = stringResource(R.string.settings_coffee_msg),
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(vertical = 8.dp),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            textAlign = TextAlign.Center
                         )
                         Column(
                             modifier = Modifier.fillMaxWidth(),
@@ -221,7 +224,7 @@ fun SettingsScreen(
                                         containerColor = MaterialTheme.colorScheme.secondary
                                     )
                                 ) {
-                                    Text("정기 구독 관리하기")
+                                    Text(stringResource(R.string.settings_subscription_manage))
                                 }
                             } else {
                                 // 구독 중이 아닌 경우: 후원 버튼들 표시
@@ -232,13 +235,13 @@ fun SettingsScreen(
                                                 billingManager.buyCoffee(activity)
                                             }
                                         } else {
-                                            Toast.makeText(context, "인터넷 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, networkErrorMsg, Toast.LENGTH_SHORT).show()
                                         }
                                     },
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.fillMaxWidth(),
                                 ) {
-                                    val text = if (isAdFree) "일회성 후원 연장하기 (30일)" else "한번만 사주기 (30일)"
+                                    val text = if (isAdFree) stringResource(R.string.settings_one_time_support_extend) else stringResource(R.string.settings_one_time_support)
                                     Text(text)
                                 }
 
@@ -249,7 +252,7 @@ fun SettingsScreen(
                                                 billingManager.subscribeCoffee(activity)
                                             }
                                         } else {
-                                            Toast.makeText(context, "인터넷 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, networkErrorMsg, Toast.LENGTH_SHORT).show()
                                         }
                                     },
                                     shape = RoundedCornerShape(12.dp),
@@ -258,7 +261,7 @@ fun SettingsScreen(
                                         containerColor = MaterialTheme.colorScheme.secondary
                                     )
                                 ) {
-                                    Text("정기 후원하기 (매달)")
+                                    Text(stringResource(R.string.settings_subscription_support))
                                 }
                             }
                         }
@@ -269,7 +272,7 @@ fun SettingsScreen(
 
             // Equipment Section
             Text(
-                text = "내 장비",
+                text = stringResource(R.string.settings_equipment_section),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -284,14 +287,14 @@ fun SettingsScreen(
             ) {
                 Column {
                     SettingsItem(
-                        title = "바디",
-                        value = selectedBody?.let { "${it.brand} ${it.name}" } ?: "바디 선택",
+                        title = stringResource(R.string.settings_body),
+                        value = selectedBody?.let { "${it.brand} ${it.name}" } ?: stringResource(R.string.settings_body_select),
                         onClick = onNavigateToBodyList
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
                     SettingsItem(
-                        title = "렌즈",
-                        value = selectedLens?.let { "${it.brand} ${it.name}" } ?: "렌즈 선택",
+                        title = stringResource(R.string.settings_lens),
+                        value = selectedLens?.let { "${it.brand} ${it.name}" } ?: stringResource(R.string.settings_lens_select),
                         onClick = onNavigateToLensList
                     )
                 }
@@ -299,7 +302,7 @@ fun SettingsScreen(
 
             // Information Section
             Text(
-                text = "정보",
+                text = stringResource(R.string.settings_info_section),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -313,10 +316,10 @@ fun SettingsScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column {
-                    SettingsItem(title = "앱 버전", value = versionName)
+                    SettingsItem(title = stringResource(R.string.settings_app_version), value = versionName)
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
                     SettingsItem(
-                        title = "개발자",
+                        title = stringResource(R.string.settings_developer),
                         value = "kongbaguni@gmail.com",
                         onClick = {
                             val intent = Intent(Intent.ACTION_SENDTO).apply {

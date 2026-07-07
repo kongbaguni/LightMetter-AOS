@@ -26,4 +26,33 @@
     <string name="metering_center">Center</string>
     <string name="exit_confirm_title">Exit</string>
     <string name="exit_confirm_message">Do you want to exit the app?</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_account_section">Account</string>
+    <string name="settings_support_section">Support</string>
+    <string name="settings_equipment_section">My Equipment</string>
+    <string name="settings_info_section">Information</string>
+
+    <string name="settings_google_connected">Google Account Connected</string>
+    <string name="settings_logout">Logout</string>
+    <string name="settings_google_connect_msg">Connect your Google account to keep your purchase history safe.</string>
+    <string name="settings_google_connect_btn">Connect Google Account</string>
+
+    <string name="settings_coffee_title">Buy me a coffee</string>
+    <string name="settings_coffee_msg">Buy the developer a coffee and enjoy all features without ads!</string>
+    <string name="settings_subscription_manage">Manage Subscription</string>
+    <string name="settings_one_time_support_extend">Extend one-time support (30 days)</string>
+    <string name="settings_one_time_support">One-time support (30 days)</string>
+    <string name="settings_subscription_support">Regular support (Monthly)</string>
+
+    <string name="settings_body">Body</string>
+    <string name="settings_lens">Lens</string>
+    <string name="settings_body_select">Select Body</string>
+    <string name="settings_lens_select">Select Lens</string>
+
+    <string name="settings_app_version">App Version</string>
+    <string name="settings_developer">Developer</string>
+    <string name="settings_version_unknown">Unknown</string>
+    <string name="settings_network_error">Please check your internet connection.</string>
 </resources>
