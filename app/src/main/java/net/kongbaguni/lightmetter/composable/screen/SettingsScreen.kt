@@ -43,7 +43,7 @@ fun SettingsScreen(
     billingManager: BillingManager,
     onBack: () -> Unit,
     onNavigateToBodyList: () -> Unit,
-    onNavigateToLensList: () -> Unit
+    onNavigateToLensList: () -> Unit,
 ) {
     val context = LocalContext.current
     
@@ -82,7 +82,7 @@ fun SettingsScreen(
                 context.packageManager.getPackageInfo(context.packageName, 0)
             }
             packageInfo.versionName ?: unknownVersion
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             unknownVersion
         }
     }
@@ -357,6 +357,7 @@ fun SettingsItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 fun SettingScreenPreview() {
