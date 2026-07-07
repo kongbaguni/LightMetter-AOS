@@ -26,7 +26,7 @@ android {
         minSdk = 23
         versionCode = baseVersionCode + githubRunNumber
         versionName = if (githubRunNumber > 0) "$baseVersionName.$githubRunNumber" else baseVersionName
-        targetSdk = 37
+        targetSdk = 35
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

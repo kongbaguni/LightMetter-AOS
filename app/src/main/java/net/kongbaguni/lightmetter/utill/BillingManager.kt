@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import com.android.billingclient.api.*
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -22,6 +23,7 @@ class BillingManager(
     context: Context,
     private val dataStore: DataStore
 ) {
+    private val applicationContext = context.applicationContext
     private val scope = CoroutineScope(Dispatchers.Main)
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
@@ -32,7 +34,7 @@ class BillingManager(
     private val _userEmail = MutableStateFlow<String?>(null)
     val userEmail: StateFlow<String?> = _userEmail
 
-    private var billingClient: BillingClient = BillingClient.newBuilder(context)
+    private var billingClient: BillingClient = BillingClient.newBuilder(applicationContext)
         .setListener { billingResult, purchases ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
                 for (purchase in purchases) {
@@ -67,6 +69,8 @@ class BillingManager(
                 if (task.isSuccessful) {
                     syncWithFirestore()
                     updateLoginState()
+                } else {
+                    Log.e("BillingManager", "Anonymous sign-in failed: ${task.exception?.message}")
                 }
             }
         } else {
@@ -90,28 +94,51 @@ class BillingManager(
         val task = GoogleSignIn.getSignedInAccountFromIntent(data)
         try {
             val account = task.getResult(com.google.android.gms.common.api.ApiException::class.java)!!
-            val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+            val idToken = account.idToken
+            
+            if (idToken == null) {
+                Log.e("BillingManager", "Google ID Token is NULL. Check Web Client ID in Firebase Console.")
+                return
+            }
 
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
             val currentUser = auth.currentUser
+            
+            Log.d("BillingManager", "Attempting to link/sign-in with Google: ${account.email}")
+
             if (currentUser != null) {
-                // 기존 익명 계정과 구글 계정 연동 (구매 내역 보존)
+                // 기존 익명 계정과 구글 계정 연동
                 currentUser.linkWithCredential(credential)
                     .addOnCompleteListener { linkTask ->
                         if (linkTask.isSuccessful) {
+                            Log.d("BillingManager", "Account linked successfully")
                             syncWithFirestore()
                             updateLoginState()
                         } else {
-                            // 연동 실패 시 (이미 다른 계정이 있을 경우 등) 직접 로그인
+                            val exception = linkTask.exception
+                            Log.w("BillingManager", "Linking failed: ${exception?.message}")
+                            
+                            // 이미 연동된 계정이 있다면 해당 계정으로 바로 로그인
                             auth.signInWithCredential(credential).addOnCompleteListener { signInTask ->
                                 if (signInTask.isSuccessful) {
+                                    Log.d("BillingManager", "Signed in with credential successfully")
                                     syncWithFirestore()
                                     updateLoginState()
+                                } else {
+                                    Log.e("BillingManager", "Sign-in failed: ${signInTask.exception?.message}")
                                 }
                             }
                         }
                     }
             }
+        } catch (e: com.google.android.gms.common.api.ApiException) {
+            Log.e("BillingManager", "Google Sign-In ApiException: status=${e.statusCode}, message=${e.message}")
+            if (e.statusCode == 7) {
+                Log.e("BillingManager", "NETWORK_ERROR detected. Please check internet connection or Google Play Services.")
+            }
+            e.printStackTrace()
         } catch (e: Exception) {
+            Log.e("BillingManager", "Google Sign-In Exception: ${e.message}")
             e.printStackTrace()
         }
     }

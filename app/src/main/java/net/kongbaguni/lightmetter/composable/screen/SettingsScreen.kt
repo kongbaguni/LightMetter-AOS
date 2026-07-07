@@ -1,19 +1,22 @@
 package net.kongbaguni.lightmetter.composable.screen
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.Uri
+import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import android.app.Activity
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
-import android.os.Build
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.Coffee
@@ -21,7 +24,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +44,13 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    
+    fun isOnline(): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
     val isAdFree by dataStore.isAdFree.collectAsState(initial = false)
     val isSubscriptionActive by dataStore.isSubscriptionActive.collectAsState(initial = false)
     val selectedBody by dataStore.selectedBody.collectAsState(initial = null)
@@ -139,7 +148,11 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(
                             onClick = {
-                                googleSignInLauncher.launch(billingManager.getGoogleSignInIntent(context))
+                                if (isOnline()) {
+                                    googleSignInLauncher.launch(billingManager.getGoogleSignInIntent(context))
+                                } else {
+                                    Toast.makeText(context, "인터넷 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
+                                }
                             },
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.fillMaxWidth()
@@ -214,8 +227,12 @@ fun SettingsScreen(
                                 // 구독 중이 아닌 경우: 후원 버튼들 표시
                                 Button(
                                     onClick = {
-                                        (context as? Activity)?.let { activity ->
-                                            billingManager.buyCoffee(activity)
+                                        if (isOnline()) {
+                                            (context as? Activity)?.let { activity ->
+                                                billingManager.buyCoffee(activity)
+                                            }
+                                        } else {
+                                            Toast.makeText(context, "인터넷 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
                                         }
                                     },
                                     shape = RoundedCornerShape(12.dp),
@@ -227,8 +244,12 @@ fun SettingsScreen(
 
                                 Button(
                                     onClick = {
-                                        (context as? Activity)?.let { activity ->
-                                            billingManager.subscribeCoffee(activity)
+                                        if (isOnline()) {
+                                            (context as? Activity)?.let { activity ->
+                                                billingManager.subscribeCoffee(activity)
+                                            }
+                                        } else {
+                                            Toast.makeText(context, "인터넷 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
                                         }
                                     },
                                     shape = RoundedCornerShape(12.dp),
