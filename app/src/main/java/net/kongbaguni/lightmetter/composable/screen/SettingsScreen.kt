@@ -38,6 +38,7 @@ import net.kongbaguni.lightmetter.utill.DataStore
 @Composable
 fun SettingsScreen(
     dataStore: DataStore,
+    billingManager: BillingManager,
     onBack: () -> Unit,
     onNavigateToBodyList: () -> Unit,
     onNavigateToLensList: () -> Unit
@@ -56,7 +57,6 @@ fun SettingsScreen(
     val selectedBody by dataStore.selectedBody.collectAsState(initial = null)
     val selectedLens by dataStore.selectedLens.collectAsState(initial = null)
 
-    val billingManager = remember { BillingManager(context, dataStore) }
     val isUserLoggedIn by billingManager.isUserLoggedIn.collectAsState()
     val userEmail by billingManager.userEmail.collectAsState()
 
@@ -359,8 +359,10 @@ fun SettingsItem(
 fun SettingScreenPreview() {
     val context = LocalContext.current
     val dataStore = remember { DataStore(context) }
+    val billingManager = remember { BillingManager(context, dataStore) }
     SettingsScreen(
         dataStore = dataStore,
+        billingManager = billingManager,
         onBack = { },
         onNavigateToBodyList = { },
         onNavigateToLensList = { }

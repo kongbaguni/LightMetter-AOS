@@ -47,7 +47,8 @@ import net.kongbaguni.lightmetter.model.BodyUiState
 @Composable
 fun BodyListScreen(
     onAddBody: () -> Unit = {},
-    onEditBody: (BodyModel) -> Unit = {}
+    onEditBody: (BodyModel) -> Unit = {},
+    onBodySelected: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val dataStore = remember { DataStore(context = context) }
@@ -174,6 +175,7 @@ fun BodyListScreen(
                         onClick = {
                             scope.launch {
                                 dataStore.saveBody(item)
+                                onBodySelected()
                             }
                         },
                         onEdit = { onEditBody(item) },

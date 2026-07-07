@@ -36,7 +36,8 @@ import net.kongbaguni.lightmetter.utill.DataStore
 fun CustomLensEditScreen(
     dataStore: DataStore,
     lensToEdit: LensModel? = null,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onSave: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     var brand by remember { mutableStateOf(lensToEdit?.brand ?: "") }
@@ -103,6 +104,7 @@ fun CustomLensEditScreen(
                     } else {
                         dataStore.repository.updateLens(lensToEdit.id, brand, name, apertures)
                     }
+                    onSave()
                     onBack()
                 }
             },

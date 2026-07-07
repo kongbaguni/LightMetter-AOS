@@ -1,6 +1,5 @@
 package net.kongbaguni.lightmetter.composable.component
 
-import net.kongbaguni.lightmetter.utill.DataStore
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -50,6 +49,8 @@ import net.kongbaguni.lightmetter.model.BodyModel
 import net.kongbaguni.lightmetter.model.DialModel
 import net.kongbaguni.lightmetter.model.FilterModel
 import net.kongbaguni.lightmetter.model.LensModel
+import net.kongbaguni.lightmetter.utill.BillingManager
+import net.kongbaguni.lightmetter.utill.DataStore
 import androidx.compose.runtime.collectAsState
 import kotlin.math.log2
 import kotlin.math.pow
@@ -59,12 +60,13 @@ import kotlin.math.roundToInt
 @Composable
 fun ControllerUI(
     measuredEv: Double? = null,
+    billingManager: BillingManager? = null,
     onCalculatedEvChange: (Double?) -> Unit = {},
     onLensClick: () -> Unit = {},
     onBodyClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val dataStore = DataStore(context = context)
+    val dataStore = remember { DataStore(context = context) }
 
     val apertureList = remember { mutableStateListOf<DialModel>() }
     val speedList = remember { mutableStateListOf<DialModel>() }
@@ -289,7 +291,10 @@ fun ControllerUI(
             onClick = onLensClick
         ) {
             selectAperture.value = it
-            scope.launch { dataStore.saveAperture(it.value as Double) }
+            scope.launch { 
+                dataStore.saveAperture(it.value as Double)
+                billingManager?.uploadAllLocalData()
+            }
         }
 
         // Shutter Speed Selector
@@ -302,13 +307,19 @@ fun ControllerUI(
             onClick = onBodyClick
         ) {
             selectSpeed.value = it
-            scope.launch { dataStore.saveShutterSpeed(it.value as String) }
+            scope.launch { 
+                dataStore.saveShutterSpeed(it.value as String)
+                billingManager?.uploadAllLocalData()
+            }
         }
 
         // ISO Selector
         SelectorSection(title = "ISO", items = isoList, initialIndex = initialIsoList.value) {
             selectIso.value = it
-            scope.launch { dataStore.saveIso(it.value as Int) }
+            scope.launch { 
+                dataStore.saveIso(it.value as Int)
+                billingManager?.uploadAllLocalData()
+            }
         }
 
         Spacer(modifier = Modifier.height(100.dp))

@@ -36,7 +36,8 @@ import net.kongbaguni.lightmetter.utill.DataStore
 fun CustomBodyEditScreen(
     dataStore: DataStore,
     bodyToEdit: BodyModel? = null,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onSave: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     var brand by remember { mutableStateOf(bodyToEdit?.brand ?: "") }
@@ -102,6 +103,7 @@ fun CustomBodyEditScreen(
                     } else {
                         dataStore.repository.updateBody(bodyToEdit.id, brand, name, speeds)
                     }
+                    onSave()
                     onBack()
                 }
             },

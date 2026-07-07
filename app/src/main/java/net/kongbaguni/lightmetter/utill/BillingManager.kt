@@ -17,7 +17,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class BillingManager(
     context: Context,
@@ -55,6 +57,10 @@ class BillingManager(
         val loggedIn = user != null && !user.isAnonymous
         _isUserLoggedIn.value = loggedIn
         _userEmail.value = if (loggedIn) user?.email else null
+        
+        if (loggedIn) {
+            syncWithFirestore()
+        }
     }
 
     /** 로그아웃 (다시 익명 계정으로 전환) */
@@ -156,30 +162,110 @@ class BillingManager(
 
     private fun syncWithFirestore() {
         val uid = auth.currentUser?.uid ?: return
+        
+        // 1. Upload local data to Firestore (Merge)
+        uploadAllLocalData()
+
+        // 2. Download from Firestore and update local
         db.collection("users").document(uid).get()
             .addOnSuccessListener { document ->
                 if (document != null && document.exists()) {
-                    val expiryTime = document.getLong("ad_free_until") ?: 0L
-                    val isSubActive = document.getBoolean("is_subscription_active") ?: false
-                    
                     scope.launch {
+                        // Billing & Settings
+                        val expiryTime = document.getLong("ad_free_until") ?: 0L
+                        val isSubActive = document.getBoolean("is_subscription_active") ?: false
+                        val showPreview = document.getBoolean("show_preview") ?: true
+                        val selectedBrand = document.getString("selected_brand")
+                        val isoValue = document.getLong("iso_value")?.toInt() ?: 200
+                        val apertureValue = document.getDouble("aperture_value") ?: 5.6
+                        val shutterSpeedValue = document.getString("shutter_speed_value") ?: "1/125"
+
                         if (expiryTime > System.currentTimeMillis()) {
                             dataStore.restoreAdFreeUntil(expiryTime)
                         }
                         dataStore.saveSubscriptionActive(isSubActive)
+                        dataStore.saveShowPreview(showPreview)
+                        dataStore.saveSelectedBrand(selectedBrand)
+                        dataStore.saveIso(isoValue)
+                        dataStore.saveAperture(apertureValue)
+                        dataStore.saveShutterSpeed(shutterSpeedValue)
+                        
+                        // Sync custom bodies
+                        val bodies = document.get("custom_bodies") as? List<Map<String, Any>>
+                        bodies?.forEach { map ->
+                            val brand = map["brand"] as? String ?: ""
+                            val name = map["name"] as? String ?: ""
+                            val shutterSpeeds = map["shutterSpeeds"] as? List<String> ?: emptyList()
+                            
+                            // Check if exists locally to avoid duplicates (simplified)
+                            val currentBodies = dataStore.repository.getAllBodies().first()
+                            if (currentBodies.none { it.brand == brand && it.name == name }) {
+                                dataStore.repository.insertBody(brand, name, shutterSpeeds)
+                            }
+                        }
+
+                        // Sync custom lenses
+                        val lenses = document.get("custom_lenses") as? List<Map<String, Any>>
+                        lenses?.forEach { map ->
+                            val brand = map["brand"] as? String ?: ""
+                            val name = map["name"] as? String ?: ""
+                            val apertures = map["apertures"] as? List<Double> ?: emptyList()
+                            
+                            val currentLenses = dataStore.repository.getAllLenses().first()
+                            if (currentLenses.none { it.brand == brand && it.name == name }) {
+                                dataStore.repository.insertLens(brand, name, apertures)
+                            }
+                        }
                     }
                 }
             }
     }
 
-    private fun uploadPurchaseToFirestore(expiryTime: Long? = null, isSubActive: Boolean? = null) {
+    fun uploadAllLocalData() {
         val uid = auth.currentUser?.uid ?: return
-        val updates = mutableMapOf<String, Any>()
-        expiryTime?.let { updates["ad_free_until"] = it }
-        isSubActive?.let { updates["is_subscription_active"] = it }
+        if (auth.currentUser?.isAnonymous == true) return
+        
+        scope.launch {
+            try {
+                val adFreeUntil = dataStore.getAdFreeUntil()
+                val isSubActive = dataStore.isSubscriptionActive.first()
+                val showPreview = dataStore.showPreview.first()
+                val selectedBrand = dataStore.selectedBrand.first()
+                val isoValue = dataStore.selectedIsoValue.first()
+                val apertureValue = dataStore.selectedApertureValue.first()
+                val shutterSpeedValue = dataStore.selectedShutterSpeedValue.first()
+                val body = dataStore.selectedBody.first()
+                val lens = dataStore.selectedLens.first()
+                val filter = dataStore.selectedFilter.first()
 
-        if (updates.isNotEmpty()) {
-            db.collection("users").document(uid).set(updates, SetOptions.merge())
+                val customBodies = dataStore.repository.getAllBodies().first()
+                    .filter { it.id >= 10000 }
+                    .map { mapOf("brand" to it.brand, "name" to it.name, "shutterSpeeds" to it.shutterSpeeds) }
+
+                val customLenses = dataStore.repository.getAllLenses().first()
+                    .filter { it.id >= 10000 }
+                    .map { mapOf("brand" to it.brand, "name" to it.name, "apertures" to it.apertures) }
+
+                val data = mutableMapOf<String, Any?>(
+                    "ad_free_until" to adFreeUntil,
+                    "is_subscription_active" to isSubActive,
+                    "show_preview" to showPreview,
+                    "selected_brand" to selectedBrand,
+                    "iso_value" to isoValue,
+                    "aperture_value" to apertureValue,
+                    "shutter_speed_value" to shutterSpeedValue,
+                    "body_id" to body.id,
+                    "lens_id" to lens.id,
+                    "filter_id" to filter?.id,
+                    "custom_bodies" to customBodies,
+                    "custom_lenses" to customLenses
+                )
+                
+                db.collection("users").document(uid).set(data.filterValues { it != null }, SetOptions.merge())
+                    .addOnFailureListener { e -> Log.e("BillingManager", "Upload failed", e) }
+            } catch (e: Exception) {
+                Log.e("BillingManager", "Error preparing upload", e)
+            }
         }
     }
 
@@ -246,8 +332,7 @@ class BillingManager(
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                         scope.launch {
                             dataStore.addAdFreeDays(30)
-                            val newExpiry = dataStore.getAdFreeUntil()
-                            uploadPurchaseToFirestore(expiryTime = newExpiry)
+                            uploadAllLocalData()
                         }
                     }
                 }
@@ -259,14 +344,14 @@ class BillingManager(
                         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                             scope.launch {
                                 dataStore.saveSubscriptionActive(true)
-                                uploadPurchaseToFirestore(isSubActive = true)
+                                uploadAllLocalData()
                             }
                         }
                     }
                 } else {
                     scope.launch {
                         dataStore.saveSubscriptionActive(true)
-                        uploadPurchaseToFirestore(isSubActive = true)
+                        uploadAllLocalData()
                     }
                 }
             }
@@ -282,7 +367,7 @@ class BillingManager(
                 }
                 scope.launch {
                     dataStore.saveSubscriptionActive(isSubActive)
-                    uploadPurchaseToFirestore(isSubActive = isSubActive)
+                    uploadAllLocalData()
                 }
             }
         }

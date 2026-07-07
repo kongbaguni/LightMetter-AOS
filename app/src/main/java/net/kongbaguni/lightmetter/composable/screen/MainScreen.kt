@@ -16,10 +16,14 @@ import androidx.compose.ui.unit.dp
 import net.kongbaguni.lightmetter.composable.component.CameraEVCheckButton
 import net.kongbaguni.lightmetter.composable.component.ControllerUI
 import net.kongbaguni.lightmetter.model.LightMetterRange
+import net.kongbaguni.lightmetter.utill.BillingManager
 import net.kongbaguni.lightmetter.utill.DataStore
 
 @Composable
-fun MainScreen(onNavigate: (Page) -> Unit) {
+fun MainScreen(
+    billingManager: BillingManager,
+    onNavigate: (Page) -> Unit
+) {
     val context = LocalContext.current
     val dataStore = remember { DataStore(context) }
     val selectedFilter by dataStore.selectedFilter.collectAsState(initial = null)
@@ -33,6 +37,7 @@ fun MainScreen(onNavigate: (Page) -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
         ControllerUI(
             measuredEv = measuredEv,
+            billingManager = billingManager,
             onCalculatedEvChange = { calculatedEv = it },
             onLensClick = { onNavigate(Page.LENSLIST) },
             onBodyClick = { onNavigate(Page.BODYLIST) }

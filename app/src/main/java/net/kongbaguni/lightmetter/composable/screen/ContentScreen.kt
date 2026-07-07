@@ -24,6 +24,7 @@ import net.kongbaguni.lightmetter.composable.component.AdBanner
 import net.kongbaguni.lightmetter.composable.component.TabBar
 import net.kongbaguni.lightmetter.model.BodyModel
 import net.kongbaguni.lightmetter.model.LensModel
+import net.kongbaguni.lightmetter.utill.BillingManager
 import net.kongbaguni.lightmetter.utill.DataStore
 
 enum class Page {
@@ -37,6 +38,7 @@ fun ContentScreen(context: Context, modifier: Modifier) {
     var lensToEdit by remember { mutableStateOf<LensModel?>(null) }
     var showExitDialog by remember { mutableStateOf(false) }
     val dataStore = remember { DataStore(context) }
+    val billingManager = remember { BillingManager(context, dataStore) }
 
     BackHandler {
         when (currentPage) {
@@ -85,7 +87,10 @@ fun ContentScreen(context: Context, modifier: Modifier) {
         }
 
         when (currentPage) {
-            Page.MAIN -> MainScreen(onNavigate = { currentPage = it })
+            Page.MAIN -> MainScreen(
+                billingManager = billingManager,
+                onNavigate = { currentPage = it }
+            )
             Page.BODYLIST -> BodyListScreen(
                 onAddBody = { 
                     bodyToEdit = null
@@ -94,7 +99,8 @@ fun ContentScreen(context: Context, modifier: Modifier) {
                 onEditBody = { body ->
                     bodyToEdit = body
                     currentPage = Page.BODY_EDIT
-                }
+                },
+                onBodySelected = { billingManager.uploadAllLocalData() }
             )
             Page.LENSLIST -> LensListScreen(
                 onAddLens = {
@@ -104,20 +110,24 @@ fun ContentScreen(context: Context, modifier: Modifier) {
                 onEditLens = { lens ->
                     lensToEdit = lens
                     currentPage = Page.LENS_EDIT
-                }
+                },
+                onLensSelected = { billingManager.uploadAllLocalData() }
             )
             Page.BODY_EDIT -> CustomBodyEditScreen(
                 dataStore = dataStore,
                 bodyToEdit = bodyToEdit,
-                onBack = { currentPage = Page.BODYLIST }
+                onBack = { currentPage = Page.BODYLIST },
+                onSave = { billingManager.uploadAllLocalData() }
             )
             Page.LENS_EDIT -> CustomLensEditScreen(
                 dataStore = dataStore,
                 lensToEdit = lensToEdit,
-                onBack = { currentPage = Page.LENSLIST }
+                onBack = { currentPage = Page.LENSLIST },
+                onSave = { billingManager.uploadAllLocalData() }
             )
             Page.SETTINGS -> SettingsScreen(
                 dataStore = dataStore,
+                billingManager = billingManager,
                 onBack = { currentPage = Page.MAIN },
                 onNavigateToBodyList = { currentPage = Page.BODYLIST },
                 onNavigateToLensList = { currentPage = Page.LENSLIST }

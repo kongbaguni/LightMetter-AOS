@@ -47,7 +47,8 @@ import net.kongbaguni.lightmetter.model.LensModel
 @Composable
 fun LensListScreen(
     onAddLens: () -> Unit = {},
-    onEditLens: (LensModel) -> Unit = {}
+    onEditLens: (LensModel) -> Unit = {},
+    onLensSelected: () -> Unit = {}
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val dataStore = remember { DataStore(context = context) }
@@ -175,6 +176,7 @@ fun LensListScreen(
                         onClick = {
                             scope.launch {
                                 dataStore.saveLens(item)
+                                onLensSelected()
                             }
                         },
                         onEdit = { onEditLens(item) },
