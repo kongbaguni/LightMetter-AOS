@@ -15,7 +15,7 @@ if (hasGoogleServices) {
 
 android {
     namespace = "net.kongbaguni.lightmetter"
-    compileSdk = 35
+    compileSdk = 37
 
     val baseVersionCode = 1
     val baseVersionName = "1.1"
@@ -26,7 +26,7 @@ android {
         minSdk = 23
         versionCode = baseVersionCode + githubRunNumber
         versionName = if (githubRunNumber > 0) "$baseVersionName.$githubRunNumber" else baseVersionName
-        targetSdk = 35
+        targetSdk = 37
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
