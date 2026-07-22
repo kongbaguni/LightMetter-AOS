@@ -15,7 +15,7 @@ if (hasGoogleServices) {
 
 android {
     namespace = "net.kongbaguni.lightmetter"
-    compileSdk = 37
+    compileSdk = 35
 
     val baseVersionCode = 1
     val baseVersionName = "1.1"
